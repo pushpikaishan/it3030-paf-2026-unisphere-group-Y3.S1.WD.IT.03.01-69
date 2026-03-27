@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import api from '../../services/api'
 
-const roleOptions = ['USER', 'ADMIN', 'TECHNICIAN', 'LECTURE']
+const roleOptions = ['USER', 'ADMIN', 'TECHNICIAN', 'LECTURE', 'MANAGER']
 
 export default function AddAllUser({ onCreated }) {
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'USER' })

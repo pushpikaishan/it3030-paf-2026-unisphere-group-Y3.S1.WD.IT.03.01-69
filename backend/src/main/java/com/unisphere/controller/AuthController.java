@@ -2,6 +2,7 @@ package com.unisphere.controller;
 
 import com.unisphere.entity.User;
 import com.unisphere.repository.UserRepository;
+import com.unisphere.security.JwtService;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +21,12 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
+    private final JwtService jwtService;
 
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository) {
+    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, JwtService jwtService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/login")
@@ -44,14 +47,25 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid email or password"));
         }
 
-        return ResponseEntity.ok(
+        String token = jwtService.generateToken(
+            user.getEmail(),
             Map.of(
+                "id", user.getId(),
+                "name", user.getName(),
+                "email", user.getEmail(),
+                "role", user.getRole().name()
+            )
+        );
+
+        return ResponseEntity.ok(Map.of(
+            "token", token,
+            "user", Map.of(
                 "id", user.getId(),
                 "name", user.getName(),
                 "email", user.getEmail(),
                 "role", user.getRole()
             )
-        );
+        ));
     }
 
     public static class LoginRequest {

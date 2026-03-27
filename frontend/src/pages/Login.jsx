@@ -13,7 +13,7 @@ export default function Login() {
     try {
       setError('')
       const loggedIn = await login(form)
-      const target = loggedIn?.role === 'ADMIN' ? '/admin' : '/dashboard'
+      const target = loggedIn?.role === 'ADMIN' || loggedIn?.role === 'MANAGER' ? '/admin' : '/dashboard'
       navigate(target)
     } catch (err) {
       setError(err.message)

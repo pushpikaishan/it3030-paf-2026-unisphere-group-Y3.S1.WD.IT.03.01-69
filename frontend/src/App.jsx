@@ -7,10 +7,11 @@ import AppRoutes from './routes/AppRoutes'
 function App() {
   const { pathname } = useLocation()
   const showSidebar = pathname.startsWith('/admin')
+  const showNavbar = !showSidebar
 
   return (
     <div className="layout">
-      <Navbar />
+      {showNavbar && <Navbar />}
       <div className={`content${showSidebar ? '' : ' no-sidebar'}`}>
         {showSidebar && <Sidebar />}
         <div className="page">
