@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import io.jsonwebtoken.Claims;
 
 @RestController
 @RequestMapping("/api/users")
@@ -35,6 +38,7 @@ public class UserController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     public ResponseEntity<?> create(@RequestBody User user) {
         try {
             return ResponseEntity.ok(userService.create(user));
@@ -44,11 +48,32 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> update(@PathVariable Long id, @RequestBody User user) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody User user, Authentication authentication) {
+        boolean isPrivileged = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
+
+        if (!isPrivileged) {
+            String email = authentication.getName();
+            Long tokenUserId = null;
+            if (authentication.getDetails() instanceof Claims claims) {
+                Number n = claims.get("id", Number.class);
+                if (n != null) tokenUserId = n.longValue();
+            }
+
+            User existing = userService.findById(id);
+            boolean sameUserById = tokenUserId != null && tokenUserId.equals(id);
+            boolean sameUserByEmail = email != null && existing != null && email.equalsIgnoreCase(existing.getEmail());
+
+            if (!sameUserById && !sameUserByEmail) {
+                return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
+            }
+        }
+
         return ResponseEntity.ok(userService.update(id, user));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
