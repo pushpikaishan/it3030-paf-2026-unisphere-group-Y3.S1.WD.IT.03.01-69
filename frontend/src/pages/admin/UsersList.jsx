@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import api from '../../services/api'
+import { useAuth } from '../../hooks/useAuth'
 
-export default function UsersList({ refreshKey }) {
+export default function UsersList({ refreshKey, statusFilter, title, actions }) {
+  const { user: currentUser } = useAuth()
+  const canManageUsers = currentUser?.role === 'ADMIN' || currentUser?.role === 'MANAGER'
   const [users, setUsers] = useState([])
   const [status, setStatus] = useState({ type: 'idle', message: '' })
   const [editingId, setEditingId] = useState(null)
@@ -49,6 +52,11 @@ export default function UsersList({ refreshKey }) {
   }
 
   const deleteUser = async (id) => {
+    if (!canManageUsers) {
+      setStatus({ type: 'error', message: 'Only admins and managers can delete users.' })
+      return
+    }
+
     try {
       setRowBusy(id)
       await api.delete(`/users/${id}`)
@@ -61,17 +69,32 @@ export default function UsersList({ refreshKey }) {
     }
   }
 
+  const setUserStatus = async (id, status, errorMessage) => {
+    try {
+      setRowBusy(id)
+      await api.post(`/users/${id}/${status}`)
+      await load()
+    } catch (err) {
+      const message = err?.response?.data?.message || errorMessage
+      setStatus({ type: 'error', message })
+    } finally {
+      setRowBusy(null)
+    }
+  }
+
+  const filteredUsers = statusFilter ? users.filter((u) => u.status === statusFilter) : users
+
   return (
     <div className="card">
       <div className="nav-session" style={{ justifyContent: 'space-between' }}>
-        <h3>All Users</h3>
+        <h3>{title || 'All Users'}</h3>
         <button className="ghost" type="button" onClick={load} disabled={status.type === 'loading'}>
           {status.type === 'loading' ? 'Loading...' : 'Refresh'}
         </button>
       </div>
       {status.type === 'error' && <p className="error">{status.message}</p>}
       <ul className="list">
-        {users.map((user) => (
+        {filteredUsers.map((user) => (
           <li key={user.id} className="stack">
             {editingId === user.id ? (
               <div className="stack">
@@ -104,26 +127,60 @@ export default function UsersList({ refreshKey }) {
             ) : (
               <div className="nav-session" style={{ justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
                 <span>
-                  <strong>{user.name || 'Unnamed User'}</strong> • {user.email} • Role: {user.role}
+                  <strong>{user.name || 'Unnamed User'}</strong> • {user.email} • Role: {user.role} • Status: {user.status}
                 </span>
                 <div className="nav-session" style={{ justifyContent: 'flex-start', gap: 8 }}>
-                  <button className="ghost" type="button" onClick={() => startEdit(user)}>
-                    Edit
-                  </button>
-                  <button
-                    className="button danger"
-                    type="button"
-                    onClick={() => deleteUser(user.id)}
-                    disabled={rowBusy === user.id}
-                  >
-                    {rowBusy === user.id ? 'Deleting...' : 'Delete'}
-                  </button>
+                  {actions?.approve && (
+                    <button
+                      className="button"
+                      type="button"
+                      onClick={() => setUserStatus(user.id, 'approve', 'Failed to approve user')}
+                      disabled={rowBusy === user.id}
+                    >
+                      {rowBusy === user.id ? 'Working...' : 'Approve'}
+                    </button>
+                  )}
+                  {actions?.reject && (
+                    <button
+                      className="ghost"
+                      type="button"
+                      onClick={() => setUserStatus(user.id, 'reject', 'Failed to reject user')}
+                      disabled={rowBusy === user.id}
+                    >
+                      Reject
+                    </button>
+                  )}
+                  {actions?.disable && (
+                    <button
+                      className="ghost"
+                      type="button"
+                      onClick={() => setUserStatus(user.id, 'disable', 'Failed to disable user')}
+                      disabled={rowBusy === user.id}
+                    >
+                      Disable
+                    </button>
+                  )}
+                  {actions?.edit && (
+                    <button className="ghost" type="button" onClick={() => startEdit(user)}>
+                      Edit
+                    </button>
+                  )}
+                  {actions?.delete && (
+                    <button
+                      className="button danger"
+                      type="button"
+                      onClick={() => deleteUser(user.id)}
+                      disabled={rowBusy === user.id || !canManageUsers}
+                    >
+                      {rowBusy === user.id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
           </li>
         ))}
-        {status.type !== 'loading' && users.length === 0 && <li className="muted">No users found.</li>}
+        {status.type !== 'loading' && filteredUsers.length === 0 && <li className="muted">No users found.</li>}
       </ul>
     </div>
   )

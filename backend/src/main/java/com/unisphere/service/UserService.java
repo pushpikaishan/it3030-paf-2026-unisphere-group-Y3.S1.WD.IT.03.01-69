@@ -3,8 +3,10 @@ package com.unisphere.service;
 import com.unisphere.entity.AuthProvider;
 import com.unisphere.entity.Role;
 import com.unisphere.entity.User;
+import com.unisphere.entity.UserStatus;
 import com.unisphere.repository.UserRepository;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,11 +35,17 @@ public class UserService {
         if (user.getProvider() == null) {
             user.setProvider(AuthProvider.LOCAL);
         }
+        if (user.getRole() == null) {
+            user.setRole(Role.USER);
+        }
         if (user.getProvider() == AuthProvider.LOCAL && (user.getPassword() == null || user.getPassword().isBlank())) {
             throw new IllegalArgumentException("Password is required for local users");
         }
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
+        }
+        if (user.getStatus() == null) {
+            user.setStatus(UserStatus.APPROVED);
         }
         if (user.getPassword() != null && !user.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -51,12 +59,14 @@ public class UserService {
         existing.setEmail(update.getEmail());
         existing.setProfileImage(update.getProfileImage());
         existing.setRole(update.getRole() != null ? update.getRole() : existing.getRole());
+        existing.setStatus(update.getStatus() != null ? update.getStatus() : existing.getStatus());
         if (update.getPassword() != null && !update.getPassword().isBlank()) {
             existing.setPassword(passwordEncoder.encode(update.getPassword()));
         }
         return userRepository.save(existing);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public void delete(Long id) {
         userRepository.deleteById(id);
     }
@@ -75,7 +85,22 @@ public class UserService {
                 user.setEmail(email);
                 user.setProfileImage(pictureUrl);
                 user.setRole(Role.USER);
+                user.setStatus(UserStatus.APPROVED);
                 return userRepository.save(user);
             });
+    }
+
+    public List<User> findPendingTechnicians() {
+        return userRepository.findByRoleAndStatus(Role.TECHNICIAN, UserStatus.PENDING);
+    }
+
+    public User updateStatus(Long id, UserStatus status) {
+        User existing = findById(id);
+        existing.setStatus(status);
+        return userRepository.save(existing);
+    }
+
+    public User disable(Long id) {
+        return updateStatus(id, UserStatus.DISABLED);
     }
 }

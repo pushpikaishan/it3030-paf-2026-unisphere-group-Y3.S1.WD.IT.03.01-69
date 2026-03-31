@@ -101,15 +101,17 @@ export default function Profile() {
       return
     }
 
-    const confirmed = window.confirm('Delete your account? This cannot be undone.')
+    const confirmed = window.confirm('Disable your account? It will be scheduled for permanent deletion in 1 month.')
     if (!confirmed) return
 
     setSaving(true)
     setStatus('')
     try {
-      await userService.delete(user.id)
+      const res = await userService.disable(user.id)
+      const message = res?.message || 'Your account has been temporarily disabled. It will be permanently deleted in 1 month.'
+      setStatus(message)
       await logout()
-      navigate('/register')
+      navigate('/login', { state: { message } })
     } catch (err) {
       setStatus(err?.message || 'Unable to delete account')
     } finally {
