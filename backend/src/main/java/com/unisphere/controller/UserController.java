@@ -5,6 +5,11 @@ import com.unisphere.service.UserService;
 import com.unisphere.entity.UserStatus;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,10 +18,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import io.jsonwebtoken.Claims;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils;
 
 @RestController
 @RequestMapping("/api/users")
@@ -75,6 +83,47 @@ public class UserController {
         }
 
         return ResponseEntity.ok(userService.update(id, user));
+    }
+
+    @PostMapping("/{id}/avatar")
+    public ResponseEntity<?> uploadAvatar(@PathVariable Long id, @RequestParam("file") MultipartFile file, Authentication authentication) {
+        boolean isPrivileged = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
+
+        if (!isPrivileged) {
+            String email = authentication.getName();
+            Long tokenUserId = null;
+            if (authentication.getDetails() instanceof Claims claims) {
+                Number n = claims.get("id", Number.class);
+                if (n != null) tokenUserId = n.longValue();
+            }
+
+            User existing = userService.findById(id);
+            boolean sameUserById = tokenUserId != null && tokenUserId.equals(id);
+            boolean sameUserByEmail = email != null && existing != null && email.equalsIgnoreCase(existing.getEmail());
+
+            if (!sameUserById && !sameUserByEmail) {
+                return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
+            }
+        }
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "No file uploaded"));
+        }
+
+        Path uploadDir = Paths.get("uploads").toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(uploadDir);
+            String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
+            String filename = UUID.randomUUID().toString() + (extension != null ? "." + extension : "");
+            Path target = uploadDir.resolve(filename);
+            Files.copy(file.getInputStream(), target);
+            String publicUrl = "/uploads/" + filename;
+            User updated = userService.updateProfileImage(id, publicUrl);
+            return ResponseEntity.ok(Map.of("url", publicUrl, "user", updated));
+        } catch (IOException ex) {
+            return ResponseEntity.status(500).body(Map.of("message", "Failed to store file"));
+        }
     }
 
     @DeleteMapping("/{id}")

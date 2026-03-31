@@ -30,7 +30,7 @@ public class User {
     @Column(length = 255)
     private String password; // nullable when using OAuth
 
-    @Column(name = "profile_image", length = 255)
+    @Column(name = "profile_image", columnDefinition = "TEXT")
     private String profileImage;
 
     @Enumerated(EnumType.STRING)
