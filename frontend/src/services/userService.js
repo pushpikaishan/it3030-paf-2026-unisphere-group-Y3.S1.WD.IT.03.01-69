@@ -45,6 +45,21 @@ export const userService = {
       throw new Error(message)
     }
   },
+  uploadAvatar: async (id, file) => {
+    if (!id) throw new Error('Missing user id')
+    if (!file) throw new Error('Missing file')
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { data } = await api.post(`/users/${id}/avatar`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return data
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Image upload failed'
+      throw new Error(message)
+    }
+  },
   delete: async (id) => {
     if (!id) throw new Error('Missing user id')
     try {

@@ -26,9 +26,21 @@ export default function Profile() {
     }
   }, [user])
 
+  const apiOrigin = import.meta.env.VITE_API_ORIGIN || 'http://localhost:8085'
+
+  useEffect(() => {
+    if (!status) return
+    const timer = setTimeout(() => setStatus(''), 2000)
+    return () => clearTimeout(timer)
+  }, [status])
+
   const avatar = useMemo(() => {
-    return profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || user?.email || 'User')}`
-  }, [profileImage, user?.email, user?.name])
+    if (profileImage) {
+      if (profileImage.startsWith('http')) return profileImage
+      return `${apiOrigin}${profileImage.startsWith('/') ? '' : '/'}${profileImage}`
+    }
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || user?.email || 'User')}`
+  }, [apiOrigin, profileImage, user?.email, user?.name])
 
   if (!user) return null
 
@@ -77,22 +89,35 @@ export default function Profile() {
   }
 
   const handleAvatarClick = () => {
-    if (!editing) setEditing(true)
     fileInputRef.current?.click()
   }
 
-  const handleFileChange = (event) => {
+  const handleFileChange = async (event) => {
     const file = event.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setProfileImage(reader.result)
-        setStatus('Preview updated. Save changes to apply.')
-      }
+    if (!user?.id) {
+      setStatus('Missing user id. Please log in again and retry.')
+      return
     }
-    reader.onerror = () => setStatus('Could not read image file')
-    reader.readAsDataURL(file)
+
+    setSaving(true)
+    setStatus('Uploading image...')
+    try {
+      const res = await userService.uploadAvatar(user.id, file)
+      const url = res?.url
+      if (url) {
+        setProfileImage(url)
+        await refresh()
+        setStatus('Image updated successfully')
+        setEditing(false)
+      } else {
+        setStatus('Upload did not return an image URL')
+      }
+    } catch (err) {
+      setStatus(err?.message || 'Could not upload image')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleDelete = async () => {

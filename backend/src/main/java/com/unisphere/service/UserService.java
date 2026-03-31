@@ -100,6 +100,12 @@ public class UserService {
         return userRepository.save(existing);
     }
 
+    public User updateProfileImage(Long id, String profileImage) {
+        User existing = findById(id);
+        existing.setProfileImage(profileImage);
+        return userRepository.save(existing);
+    }
+
     public User disable(Long id) {
         return updateStatus(id, UserStatus.DISABLED);
     }
