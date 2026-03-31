@@ -31,12 +31,16 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final com.unisphere.security.OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final com.unisphere.security.OAuth2FailureHandler oAuth2FailureHandler;
 
-    public SecurityConfig(CustomOidcUserService customOidcUserService, CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(CustomOidcUserService customOidcUserService, CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, JwtAuthenticationFilter jwtAuthenticationFilter, com.unisphere.security.OAuth2SuccessHandler oAuth2SuccessHandler, com.unisphere.security.OAuth2FailureHandler oAuth2FailureHandler) {
         this.customOidcUserService = customOidcUserService;
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
+        this.oAuth2FailureHandler = oAuth2FailureHandler;
     }
 
     @Bean
@@ -49,13 +53,18 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/me").permitAll()
                 .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAnyRole("ADMIN", "MANAGER")
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(daoAuthenticationProvider())
-            .oauth2Login(AbstractHttpConfigurer::disable)
+            .oauth2Login(oauth -> oauth
+                .userInfoEndpoint(userInfo -> userInfo.oidcUserService(customOidcUserService))
+                .successHandler(oAuth2SuccessHandler)
+                .failureHandler(oAuth2FailureHandler)
+            )
             .logout(AbstractHttpConfigurer::disable)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

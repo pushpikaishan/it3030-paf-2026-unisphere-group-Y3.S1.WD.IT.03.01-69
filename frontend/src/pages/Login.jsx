@@ -1,12 +1,21 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { startGoogleLogin } from '../utils/helpers'
 
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const message = params.get('error')
+    if (message) {
+      setError(message)
+    }
+  }, [params])
 
   const submit = async (e) => {
     e.preventDefault()
@@ -42,6 +51,9 @@ export default function Login() {
         <button className="button" type="submit">
           Login
         </button>
+          <button className="ghost" type="button" onClick={() => startGoogleLogin()}>
+            Continue with Google
+          </button>
         {error && <p className="error">{error}</p>}
       </form>
       <p className="muted">

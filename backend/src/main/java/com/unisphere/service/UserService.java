@@ -71,21 +71,51 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    public User upsertOAuthUser(String name, String email, String pictureUrl) {
+    public User upsertOAuthUser(String googleId, String name, String email, String pictureUrl, Role desiredRole, UserStatus desiredStatus) {
+        Role targetRole = desiredRole != null ? desiredRole : Role.USER;
+        UserStatus targetStatus;
+        if (desiredStatus != null) {
+            targetStatus = desiredStatus;
+        } else if (targetRole == Role.TECHNICIAN) {
+            targetStatus = UserStatus.PENDING;
+        } else {
+            targetStatus = UserStatus.APPROVED;
+        }
+
         return userRepository
             .findByEmail(email)
             .map(existing -> {
                 existing.setName(name);
                 existing.setProfileImage(pictureUrl);
+                if (googleId != null && !googleId.isBlank()) {
+                    existing.setGoogleId(googleId);
+                }
+                existing.setProvider(AuthProvider.GOOGLE);
+                // Preserve existing role/status unless an explicit desired role/status was provided
+                if (desiredRole != null) {
+                    existing.setRole(targetRole);
+                }
+                if (desiredStatus != null) {
+                    existing.setStatus(targetStatus);
+                }
+                // If existing has no role/status, backfill sensible defaults
+                if (existing.getRole() == null) {
+                    existing.setRole(targetRole);
+                }
+                if (existing.getStatus() == null) {
+                    existing.setStatus(targetStatus);
+                }
                 return userRepository.save(existing);
             })
             .orElseGet(() -> {
                 User user = new User();
+                user.setGoogleId(googleId);
                 user.setName(name);
                 user.setEmail(email);
                 user.setProfileImage(pictureUrl);
-                user.setRole(Role.USER);
-                user.setStatus(UserStatus.APPROVED);
+                user.setRole(targetRole);
+                user.setProvider(AuthProvider.GOOGLE);
+                user.setStatus(targetStatus);
                 return userRepository.save(user);
             });
     }

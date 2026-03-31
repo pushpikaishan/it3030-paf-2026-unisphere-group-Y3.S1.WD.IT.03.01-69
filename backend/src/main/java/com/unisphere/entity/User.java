@@ -39,6 +39,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private AuthProvider provider = AuthProvider.LOCAL;
 
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status = UserStatus.PENDING;
@@ -106,6 +109,14 @@ public class User {
 
     public void setProvider(AuthProvider provider) {
         this.provider = provider;
+    }
+
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
     }
 
     public UserStatus getStatus() {

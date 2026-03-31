@@ -7,7 +7,8 @@ import AppRoutes from './routes/AppRoutes'
 function App() {
   const { pathname } = useLocation()
   const showSidebar = pathname.startsWith('/admin')
-  const showNavbar = !showSidebar
+  const hideNavbarRoutes = ['/pending/technician', '/login', '/register']
+  const showNavbar = !showSidebar && !hideNavbarRoutes.includes(pathname)
 
   return (
     <div className="layout">
