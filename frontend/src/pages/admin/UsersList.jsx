@@ -137,7 +137,13 @@ export default function UsersList({ refreshKey, statusFilter, title, actions }) 
                       onClick={() => setUserStatus(user.id, 'approve', 'Failed to approve user')}
                       disabled={rowBusy === user.id}
                     >
-                      {rowBusy === user.id ? 'Working...' : 'Approve'}
+                      {rowBusy === user.id
+                        ? 'Working...'
+                        : statusFilter === 'DISABLED'
+                          ? 'Activate'
+                          : statusFilter === 'REJECTED'
+                            ? 'Reauthorize'
+                            : 'Approve'}
                     </button>
                   )}
                   {actions?.reject && (
