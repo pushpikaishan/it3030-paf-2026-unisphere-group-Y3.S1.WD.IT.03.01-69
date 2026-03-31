@@ -5,58 +5,139 @@ import { useAuth } from '../hooks/useAuth'
 export default function Register() {
   const { register } = useAuth()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', email: '', password: '' })
-  const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState('user')
+  const [userForm, setUserForm] = useState({ name: '', email: '', password: '' })
+  const [techForm, setTechForm] = useState({ name: '', email: '', password: '' })
+  const [userError, setUserError] = useState('')
+  const [techError, setTechError] = useState('')
+  const [techSuccess, setTechSuccess] = useState('')
 
-  const submit = async (e) => {
+  const validatePassword = (pwd) => {
+    if (!pwd || !pwd.trim()) return 'Password is required'
+    if (pwd.trim().length < 6) return 'Password must be at least 6 characters'
+    return ''
+  }
+
+  const submitUser = async (e) => {
     e.preventDefault()
+    setUserError('')
+    const pwdError = validatePassword(userForm.password)
+    if (pwdError) {
+      setUserError(pwdError)
+      return
+    }
     try {
-      setError('')
-      if (!form.password || !form.password.trim()) {
-        setError('Password is required')
-        return
+      const res = await register({ ...userForm, role: 'USER' })
+      if (res?.token) {
+        navigate('/dashboard')
+      } else {
+        setUserError('Registration succeeded but no session was created. Please login.')
       }
-      if (form.password.trim().length < 6) {
-        setError('Password must be at least 6 characters')
-        return
-      }
-      await register(form)
-      navigate('/dashboard')
     } catch (err) {
-      setError(err.message)
+      setUserError(err.message)
+    }
+  }
+
+  const submitTech = async (e) => {
+    e.preventDefault()
+    setTechError('')
+    setTechSuccess('')
+    const pwdError = validatePassword(techForm.password)
+    if (pwdError) {
+      setTechError(pwdError)
+      return
+    }
+    try {
+      const res = await register({ ...techForm, role: 'TECHNICIAN' })
+      const message = res?.message || 'Technician registration submitted for approval.'
+      setTechSuccess(message)
+      setTechForm({ name: '', email: '', password: '' })
+    } catch (err) {
+      setTechError(err.message)
     }
   }
 
   return (
     <div className="auth-card">
       <h1>Create account</h1>
-      <p className="muted">Register with your email and password to get started.</p>
-      <form className="stack" onSubmit={submit}>
-        <input
-          required
-          placeholder="Full name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-        />
-        <input
-          required
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-        />
-        <input
-          required
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-        />
-        <button className="button" type="submit">
-          Register
+      <p className="muted">Choose your registration type. Technicians require admin approval before logging in.</p>
+
+      <div className="nav-session" style={{ gap: 12 }}>
+        <button
+          className={activeTab === 'user' ? 'button' : 'ghost'}
+          type="button"
+          onClick={() => setActiveTab('user')}
+        >
+          Normal User
         </button>
-        {error && <p className="error">{error}</p>}
-      </form>
+        <button
+          className={activeTab === 'technician' ? 'button' : 'ghost'}
+          type="button"
+          onClick={() => setActiveTab('technician')}
+        >
+          Technician
+        </button>
+      </div>
+
+      {activeTab === 'user' && (
+        <form className="stack" onSubmit={submitUser}>
+          <input
+            required
+            placeholder="Full name"
+            value={userForm.name}
+            onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+          />
+          <input
+            required
+            type="email"
+            placeholder="Email"
+            value={userForm.email}
+            onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+          />
+          <input
+            required
+            type="password"
+            placeholder="Password"
+            value={userForm.password}
+            onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+          />
+          <button className="button" type="submit">
+            Register & Login
+          </button>
+          {userError && <p className="error">{userError}</p>}
+        </form>
+      )}
+
+      {activeTab === 'technician' && (
+        <form className="stack" onSubmit={submitTech}>
+          <input
+            required
+            placeholder="Full name"
+            value={techForm.name}
+            onChange={(e) => setTechForm({ ...techForm, name: e.target.value })}
+          />
+          <input
+            required
+            type="email"
+            placeholder="Email"
+            value={techForm.email}
+            onChange={(e) => setTechForm({ ...techForm, email: e.target.value })}
+          />
+          <input
+            required
+            type="password"
+            placeholder="Password"
+            value={techForm.password}
+            onChange={(e) => setTechForm({ ...techForm, password: e.target.value })}
+          />
+          <div className="muted">Admin approval is required before technicians can log in.</div>
+          <button className="button" type="submit">
+            Submit for Approval
+          </button>
+          {techError && <p className="error">{techError}</p>}
+          {techSuccess && <p className="muted">{techSuccess}</p>}
+        </form>
+      )}
       <p className="muted">
         Already have an account? <Link to="/login">Login</Link>
       </p>

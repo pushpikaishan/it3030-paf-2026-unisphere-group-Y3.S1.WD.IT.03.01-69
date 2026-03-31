@@ -54,6 +54,7 @@ public class MeController {
         String picture = null;
         String role = null;
         Long id = null;
+        String status = null;
 
         if (principalObj instanceof OidcUser oidcUser) {
             email = oidcUser.getEmail();
@@ -65,6 +66,7 @@ public class MeController {
             name = claims.get("name", String.class);
             role = claims.get("role", String.class);
             id = claims.get("id", Number.class) != null ? claims.get("id", Number.class).longValue() : null;
+            status = claims.get("status", String.class);
         } else {
             email = principalObj != null ? principalObj.toString() : null;
         }
@@ -83,6 +85,7 @@ public class MeController {
             email = dbUser.getEmail();
             role = dbUser.getRole() != null ? dbUser.getRole().name() : role;
             picture = dbUser.getProfileImage();
+            status = dbUser.getStatus() != null ? dbUser.getStatus().name() : status;
         }
 
         return ResponseEntity.ok(Map.of(
@@ -92,6 +95,7 @@ public class MeController {
             "email", email,
             "role", role,
             "picture", picture,
+            "status", status,
             "authorities", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList()
         ));
     }

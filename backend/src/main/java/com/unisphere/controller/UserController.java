@@ -2,6 +2,7 @@ package com.unisphere.controller;
 
 import com.unisphere.entity.User;
 import com.unisphere.service.UserService;
+import com.unisphere.entity.UserStatus;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
@@ -67,6 +68,10 @@ public class UserController {
             if (!sameUserById && !sameUserByEmail) {
                 return ResponseEntity.status(403).body(Map.of("message", "Forbidden"));
             }
+
+            // Prevent self-service escalation
+            user.setRole(null);
+            user.setStatus(null);
         }
 
         return ResponseEntity.ok(userService.update(id, user));
@@ -77,5 +82,69 @@ public class UserController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/disable")
+    public ResponseEntity<?> disable(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
+        }
+
+        boolean isPrivileged = authentication.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
+
+        User existing = userService.findById(id);
+
+        if (!isPrivileged) {
+            String email = authentication.getName();
+            Long tokenUserId = null;
+            if (authentication.getDetails() instanceof Claims claims) {
+                Number n = claims.get("id", Number.class);
+                if (n != null) tokenUserId = n.longValue();
+            }
+
+            boolean sameUserById = tokenUserId != null && tokenUserId.equals(id);
+            boolean sameUserByEmail = email != null && existing != null && email.equalsIgnoreCase(existing.getEmail());
+
+            if (!sameUserById && !sameUserByEmail) {
+                return ResponseEntity.status(403).body(Map.of("message", "Only admins can disable other accounts"));
+            }
+        }
+
+        User updated = userService.disable(existing.getId());
+        return ResponseEntity.ok(Map.of(
+            "message", "Account temporarily disabled. It will be deleted permanently in 1 month.",
+            "user", updated
+        ));
+    }
+
+    @PostMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public User approve(@PathVariable Long id) {
+        return userService.updateStatus(id, UserStatus.APPROVED);
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public User reject(@PathVariable Long id) {
+        return userService.updateStatus(id, UserStatus.REJECTED);
+    }
+
+    @GetMapping("/technicians/pending")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<User> pendingTechnicians() {
+        return userService.findPendingTechnicians();
+    }
+
+    @PostMapping("/technicians/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public User approveTechnician(@PathVariable Long id) {
+        return userService.updateStatus(id, UserStatus.APPROVED);
+    }
+
+    @PostMapping("/technicians/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public User rejectTechnician(@PathVariable Long id) {
+        return userService.updateStatus(id, UserStatus.REJECTED);
     }
 }

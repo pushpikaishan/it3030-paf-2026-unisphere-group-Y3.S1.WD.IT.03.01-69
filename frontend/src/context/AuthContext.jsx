@@ -75,7 +75,11 @@ export function AuthProvider({ children }) {
 
   const register = async (payload) => {
     const data = await userService.register(payload)
-    setUser(data)
+    if (data?.token && data?.user) {
+      setUser(data.user)
+    } else {
+      setUser(null)
+    }
     return data
   }
 

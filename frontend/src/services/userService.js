@@ -2,7 +2,10 @@ import api from './api'
 
 export const userService = {
   register: async (payload) => {
-    const { data } = await api.post('/users', payload)
+    const { data } = await api.post('/auth/register', payload)
+    if (data?.token) {
+      localStorage.setItem('token', data.token)
+    }
     return data
   },
   login: async (payload) => {
@@ -13,7 +16,15 @@ export const userService = {
       }
       return data?.user
     } catch (err) {
-      const message = err?.response?.data?.message || 'Login failed'
+      const raw = err?.response?.data?.message || err?.response?.data || 'Login failed'
+      const normalized = raw?.toLowerCase() || ''
+      const message = normalized.includes('pending')
+        ? 'Your account is awaiting admin approval.'
+        : normalized.includes('rejected')
+          ? 'Your account was temporarily rejected. Please contact an administrator.'
+          : normalized.includes('disabled')
+            ? 'Your account is disabled. Please contact an administrator to reactivate.'
+            : raw
       throw new Error(message)
     }
   },
@@ -40,6 +51,16 @@ export const userService = {
       await api.delete(`/users/${id}`)
     } catch (err) {
       const message = err?.response?.data?.message || 'Delete failed'
+      throw new Error(message)
+    }
+  },
+  disable: async (id) => {
+    if (!id) throw new Error('Missing user id')
+    try {
+      const { data } = await api.post(`/users/${id}/disable`)
+      return data
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Disable failed'
       throw new Error(message)
     }
   },
