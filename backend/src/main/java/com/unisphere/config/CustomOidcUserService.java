@@ -26,8 +26,9 @@ public class CustomOidcUserService extends OidcUserService {
         String email = oidcUser.getEmail();
         String name = oidcUser.getFullName();
         String picture = oidcUser.getPicture();
+        String googleId = oidcUser.getSubject();
 
-        User saved = userService.upsertOAuthUser(name, email, picture);
+        User saved = userService.upsertOAuthUser(googleId, name, email, picture, null, null);
         Role role = saved.getRole();
         return new DefaultOidcUser(
             Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name())),

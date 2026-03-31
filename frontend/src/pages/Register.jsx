@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { startGoogleLogin } from '../utils/helpers'
 
 export default function Register() {
   const { register } = useAuth()
@@ -81,6 +82,14 @@ export default function Register() {
 
       {activeTab === 'user' && (
         <form className="stack" onSubmit={submitUser}>
+          <button className="ghost" type="button" onClick={() => startGoogleLogin()} style={{ width: '100%' }}>
+            Continue with Google
+          </button>
+
+          <div className="muted" style={{ textAlign: 'center' }}>
+            — or register with email —
+          </div>
+
           <input
             required
             placeholder="Full name"
@@ -110,6 +119,19 @@ export default function Register() {
 
       {activeTab === 'technician' && (
         <form className="stack" onSubmit={submitTech}>
+          <button
+            className="ghost"
+            type="button"
+            onClick={() => startGoogleLogin('TECHNICIAN')}
+            style={{ width: '100%' }}
+          >
+            Continue with Google as Technician
+          </button>
+
+          <div className="muted" style={{ textAlign: 'center' }}>
+            — or register with email —
+          </div>
+
           <input
             required
             placeholder="Full name"
