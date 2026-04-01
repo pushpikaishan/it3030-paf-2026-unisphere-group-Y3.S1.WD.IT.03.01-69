@@ -10,33 +10,55 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 20px;
-  background: #053769;
-  color: #ffffff;
+  padding: 14px 24px;
+  background: #ffffff;
+  color: #0a2c5a;
+  border-bottom: 1px solid #e6ecf5;
 }
 
 .navbar a {
-  color: #ffffff;
+  color: inherit;
   text-decoration: none;
 }
 
 .brand {
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: -0.4px;
+  font-size: 20px;
+  color: #0a2c5a;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-logo {
+  height: 28px;
+  width: auto;
+  display: block;
 }
 
 .nav-links {
   display: flex;
-  gap: 12px;
+  gap: 16px;
 }
 
 .nav-links a {
-  padding: 6px 10px;
-  border-radius: 10px;
+  padding: 8px 2px;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
+  font-weight: 700;
+  color: #0a2c5a;
+  transition: color 0.15s ease, border-bottom-color 0.15s ease;
 }
 
 .nav-links a.active {
-  background: #016bae;
+  color: #e97b25;
+  border-bottom-color: #e97b25;
+}
+
+.nav-links a:hover {
+  color: #e97b25;
+  border-bottom-color: #e97b25;
 }
 
 .nav-session {
@@ -49,17 +71,17 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 6px 12px;
+  border-radius: 14px;
+  background: #f7f9fc;
+  border: 1px solid #e6ecf5;
   text-decoration: none;
-  color: #ffffff;
-  box-shadow: 0 10px 30px rgba(5, 55, 105, 0.2);
+  color: #0a2c5a;
+  box-shadow: 0 8px 22px rgba(10, 44, 90, 0.12);
 }
 
 .nav-profile:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: #eef3fb;
 }
 
 .nav-avatar {
@@ -67,12 +89,13 @@
   height: 36px;
   border-radius: 12px;
   object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  border: 2px solid #e97b25;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
 }
 
 .nav-user {
-  font-weight: 600;
+  font-weight: 700;
+  color: #0a2c5a;
 }
 
 .content {
@@ -161,6 +184,120 @@
   box-shadow: 0 10px 30px rgba(5, 55, 105, 0.08);
   display: grid;
   gap: 10px;
+}
+
+.dashboard {
+  display: grid;
+  gap: 28px;
+}
+
+.hero {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  min-height: 360px;
+  background: center/cover no-repeat;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+  isolation: isolate;
+  border-bottom: 4px solid #f8d23c;
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(9, 26, 53, 0.78), rgba(5, 18, 36, 0.5));
+  z-index: 1;
+}
+
+.hero__content {
+  position: relative;
+  z-index: 2;
+  color: #ffffff;
+  padding: 32px;
+  max-width: 720px;
+  display: grid;
+  gap: 14px;
+  text-align: center;
+  align-items: center;
+  justify-items: center;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  color: #f8b042;
+  margin: 0;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.2;
+}
+
+.subhead {
+  color: #e8eef6;
+  margin: 0;
+}
+
+.hero__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #f0be0a, #f15b2a);
+  color: #0a2c5a;
+  box-shadow: 0 12px 24px rgba(255, 214, 69, 0.3);
+}
+
+.btn.ghost {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+.btn.action {
+  width: 100%;
+  background: linear-gradient(120deg, #f68b1e, #f15b2a);
+  color: #0a2c5a;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.tile {
+  border: 1px solid #f3d5b5;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fffaf4;
+  box-shadow: 0 8px 18px rgba(10, 44, 90, 0.08);
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.tile__icon {
+  font-size: 26px;
 }
 
 .grid-two {
