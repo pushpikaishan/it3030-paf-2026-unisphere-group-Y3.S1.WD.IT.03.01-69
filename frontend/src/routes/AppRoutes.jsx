@@ -9,6 +9,7 @@ import Register from '../pages/Register'
 import Profile from '../pages/Profile'
 import OAuthCallback from '../pages/OAuthCallback'
 import PendingApproval from '../pages/PendingApproval'
+import ContactAdmin from '../pages/ContactAdmin'
 import { useAuth } from '../hooks/useAuth'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import AdminResources from '../pages/admin/AdminResources'
@@ -53,6 +54,7 @@ export default function AppRoutes() {
       />
       <Route path="/login" element={user ? <Navigate to={authedHome} replace /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to={authedHome} replace /> : <Register />} />
+      <Route path="/contact-admin" element={<ContactAdmin />} />
       <Route path="/pending/technician" element={<PendingApproval />} />
       <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route path="*" element={<Navigate to="/" replace />} />

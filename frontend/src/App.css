@@ -67,6 +67,36 @@
   gap: 10px;
 }
 
+.nav-bell-btn {
+  border: none;
+  background: transparent;
+  padding: 6px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-bell-btn:hover {
+  background: #eef3fb;
+}
+
+.nav-bell {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.nav-notify-panel {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  width: 320px;
+  max-width: calc(100% - 32px);
+  z-index: 10;
+}
+
 .nav-profile {
   display: inline-flex;
   align-items: center;
@@ -333,6 +363,18 @@
   cursor: pointer;
 }
 
+.google-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.google-icon {
+  height: 18px;
+  width: 18px;
+}
+
 input,
 select,
 button,
@@ -358,6 +400,156 @@ select {
   box-shadow: 0 12px 32px rgba(5, 55, 105, 0.12);
   display: grid;
   gap: 12px;
+}
+
+/* Auth layout */
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(320px, 1.2fr) minmax(340px, 1fr);
+  background: #0a2c5a;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Remove outer page padding on auth screens so the background reaches the edges */
+.page .auth-shell {
+  margin: -24px;
+  width: calc(100% + 48px);
+  max-width: none;
+}
+
+.auth-hero {
+  position: relative;
+  padding: 48px;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(110deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.6) 45%, rgba(0, 0, 0, 0.24) 100%);
+}
+
+.auth-hero-glass {
+  background: none;
+  border: none;
+  color: #ffffff;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  max-width: 640px;
+  backdrop-filter: none;
+  display: grid;
+  gap: 14px;
+  text-shadow: 0 6px 26px rgba(0, 0, 0, 0.45);
+}
+
+.pending-hero-glass {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 32px;
+  border-radius: 18px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  max-width: 680px;
+  gap: 16px;
+}
+
+.pending-logo {
+  height: 68px;
+  width: auto;
+}
+
+.pending-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  grid-template-columns: 1fr;
+}
+
+.pending-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.68) 45%, rgba(0, 0, 0, 0.46) 70%, rgba(0, 0, 0, 0.32) 85%, rgba(0, 0, 0, 0.2) 100%);
+  z-index: 0;
+}
+
+.pending-shell .auth-hero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  background: none;
+  padding: 0;
+}
+
+.pending-hero-glass {
+  margin: 0 auto;
+}
+
+.pending-title {
+  color: #016bae;
+}
+
+.auth-logo {
+  height: 250px;
+  width: auto;
+}
+
+.auth-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #e97b25;
+  font-weight: 700;
+  margin: 0;
+}
+
+.auth-subhead {
+  color: #e5e7eb;
+  margin: 0;
+}
+
+.auth-panel {
+  background: #ffffff;
+  padding: 32px;
+  display: grid;
+  gap: 16px;
+  border-left: 1px solid #e6ecf5;
+}
+
+.auth-panel h2 {
+  margin: 0;
+  color: #0a2c5a;
+}
+
+.auth-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #0a2c5a;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+textarea {
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  resize: vertical;
 }
 
 .loader {

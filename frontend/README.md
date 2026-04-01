@@ -1,16 +1,42 @@
-# React + Vite
+# Frontend (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend app for the Smart Campus project.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Node.js 20+ (LTS recommended)
+2. npm 10+
+3. Backend running on http://localhost:8085
 
-## React Compiler
+## Install
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+```
 
-## Expanding the ESLint configuration
+## Run (Development)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run dev
+```
+
+Open: http://localhost:5173
+
+## Available Scripts
+
+- npm run dev: start Vite dev server
+- npm run build: create production build
+- npm run preview: preview production build locally
+- npm run lint: run ESLint
+
+## API Integration
+
+- API base path in frontend code: /api
+- Vite proxy forwards to backend http://localhost:8085
+- Uploads path /uploads is also proxied to backend
+
+## Important Notes
+
+- Start backend first, then frontend.
+- If API requests fail, check backend port and vite.config.js proxy settings.
+- For full-stack setup details, see repository root README.md.

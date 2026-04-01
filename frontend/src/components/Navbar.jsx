@@ -1,11 +1,16 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import NotificationPanel from './NotificationPanel'
 import logo from '../assets/images/unisphere.png'
+import bell from '../assets/images/normelbell.png'
 
 export default function Navbar() {
+  const [showNotifications, setShowNotifications] = useState(false)
   const { pathname } = useLocation()
   const { user } = useAuth()
   const isPrivileged = user?.role === 'ADMIN' || user?.role === 'MANAGER'
+  const isTechnician = user?.role === 'TECHNICIAN'
   const onAdminPage = pathname.startsWith('/admin')
   const avatar =
     user?.profileImage || user?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}`
@@ -23,11 +28,13 @@ export default function Navbar() {
     { to: '/bookings', label: 'Bookings' },
     { to: '/resources', label: 'Resources' },
     { to: '/tickets', label: 'Tickets' },
+    ...(isTechnician ? [{ to: '/restoration', label: 'Restoration' }] : []),
     ...(isPrivileged ? [{ to: '/admin', label: 'Admin' }] : []),
   ]
 
   const links = isPrivileged && onAdminPage ? adminNav : defaultNav
   const brandHref = isPrivileged && onAdminPage ? '/admin/dashboard' : '/'
+  const notifications = user?.notifications || []
 
   return (
     <header className="navbar">
@@ -43,6 +50,14 @@ export default function Navbar() {
         ))}
       </nav>
       <div className="nav-session">
+        <button
+          type="button"
+          className="nav-bell-btn"
+          onClick={() => setShowNotifications((prev) => !prev)}
+          aria-label="Toggle notifications"
+        >
+          <img className="nav-bell" src={bell} alt="Notifications" />
+        </button>
         {user && (
           <Link className="nav-profile" to="/profile">
             <img className="nav-avatar" src={avatar} alt="Profile avatar" />
@@ -50,6 +65,11 @@ export default function Navbar() {
           </Link>
         )}
       </div>
+      {showNotifications && (
+        <div className="nav-notify-panel">
+          <NotificationPanel items={notifications} />
+        </div>
+      )}
     </header>
   )
 }
