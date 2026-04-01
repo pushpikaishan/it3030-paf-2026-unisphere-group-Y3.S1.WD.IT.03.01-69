@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import logo from '../assets/images/unisphere.png'
 
 export default function Navbar() {
   const { pathname } = useLocation()
@@ -31,7 +32,8 @@ export default function Navbar() {
   return (
     <header className="navbar">
       <Link className="brand" to={brandHref}>
-        UniSphere
+        <img className="brand-logo" src={logo} alt="UniSphere" />
+        <span>UniSphere</span>
       </Link>
       <nav className="nav-links">
         {links.map((link) => (
