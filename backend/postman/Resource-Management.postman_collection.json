@@ -1,0 +1,242 @@
+{
+  "info": {
+    "_postman_id": "ed5bbec2-66b1-41dc-8894-cfe6efce5c51",
+    "name": "UniSphere Resource Management",
+    "description": "Resource Management API collection (7 endpoints)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Resources (with filters)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/resources?type=LAB&minCapacity=20&location=Block&status=ACTIVE&search=computer&page=0&size=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "resources"
+          ],
+          "query": [
+            {
+              "key": "type",
+              "value": "LAB"
+            },
+            {
+              "key": "minCapacity",
+              "value": "20"
+            },
+            {
+              "key": "location",
+              "value": "Block"
+            },
+            {
+              "key": "status",
+              "value": "ACTIVE"
+            },
+            {
+              "key": "search",
+              "value": "computer"
+            },
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Resource By ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/resources/{{resourceId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "resources",
+            "{{resourceId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Resource Types",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/resources/types",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "resources",
+            "types"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create Resource (ADMIN)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Lab B-203\",\n  \"type\": \"LAB\",\n  \"capacity\": 45,\n  \"location\": \"Block B, Floor 2\",\n  \"availabilityWindows\": \"Mon-Fri 08:00-17:00\",\n  \"status\": \"ACTIVE\",\n  \"description\": \"Networking and systems lab\",\n  \"imageUrl\": \"https://example.com/lab-b203.jpg\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/resources",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "resources"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Update Resource (ADMIN)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Lab B-203 Updated\",\n  \"type\": \"LAB\",\n  \"capacity\": 50,\n  \"location\": \"Block B, Floor 2\",\n  \"availabilityWindows\": \"Mon-Sat 08:00-18:00\",\n  \"status\": \"ACTIVE\",\n  \"description\": \"Updated networking lab\",\n  \"imageUrl\": \"https://example.com/lab-b203-updated.jpg\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/resources/{{resourceId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "resources",
+            "{{resourceId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Delete Resource (ADMIN)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/resources/{{resourceId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "resources",
+            "{{resourceId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Update Resource Status (ADMIN)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{adminToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"OUT_OF_SERVICE\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/resources/{{resourceId}}/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "resources",
+            "{{resourceId}}",
+            "status"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8085"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "resourceId",
+      "value": "1"
+    }
+  ]
+}
