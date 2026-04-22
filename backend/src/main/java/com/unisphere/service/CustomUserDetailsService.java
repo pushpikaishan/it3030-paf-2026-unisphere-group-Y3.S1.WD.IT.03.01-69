@@ -3,8 +3,6 @@ package com.unisphere.service;
 import com.unisphere.entity.User;
 import com.unisphere.entity.UserStatus;
 import com.unisphere.repository.UserRepository;
-import java.util.Collections;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

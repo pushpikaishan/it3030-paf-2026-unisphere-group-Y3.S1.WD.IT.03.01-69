@@ -9,6 +9,7 @@ export default function Sidebar() {
   if (!isPrivileged) return null
 
   const adminNav = [
+    // MEMBER 2: keep booking management visible from the privileged navigation rail.
     { to: '/admin/dashboard', label: 'Dashboard' },
     { to: '/admin/resources', label: 'Resources Management' },
     { to: '/admin/bookings', label: 'Booking Management' },

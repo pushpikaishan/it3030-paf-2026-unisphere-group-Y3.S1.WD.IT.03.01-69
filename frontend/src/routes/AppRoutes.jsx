@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import Loader from '../components/Loader'
 import Dashboard from '../pages/Dashboard'
 import BookingPage from '../pages/BookingPage'
+import MyBookingsPage from '../pages/MyBookingsPage'
 import ResourcePage from '../pages/ResourcePage'
 import TicketPage from '../pages/TicketPage'
 import Login from '../pages/Login'
@@ -13,7 +14,7 @@ import ContactAdmin from '../pages/ContactAdmin'
 import { useAuth } from '../hooks/useAuth'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import AdminResources from '../pages/admin/AdminResources'
-import AdminBookings from '../pages/admin/AdminBookings'
+import AdminBookingsPage from '../pages/AdminBookingsPage'
 import AdminUsers from '../pages/admin/AdminUsers'
 import AdminNotifications from '../pages/admin/AdminNotifications'
 import AdminProfile from '../pages/admin/AdminProfile'
@@ -31,7 +32,8 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/" element={<Navigate to={user ? authedHome : '/login'} replace />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/bookings" element={<BookingPage />} />
+      <Route path="/bookings" element={user ? <BookingPage /> : <Navigate to="/login" replace />} />
+      <Route path="/bookings/my" element={user ? <MyBookingsPage /> : <Navigate to="/login" replace />} />
       <Route path="/resources" element={<ResourcePage />} />
       <Route path="/tickets" element={<TicketPage />} />
       <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" replace />} />
@@ -41,7 +43,7 @@ export default function AppRoutes() {
       />
       <Route path="/admin/dashboard" element={isPrivileged ? <AdminDashboard /> : <Navigate to="/dashboard" replace />} />
       <Route path="/admin/resources" element={isPrivileged ? <AdminResources /> : <Navigate to="/dashboard" replace />} />
-      <Route path="/admin/bookings" element={isPrivileged ? <AdminBookings /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/admin/bookings" element={isPrivileged ? <AdminBookingsPage /> : <Navigate to="/dashboard" replace />} />
       <Route path="/admin/users" element={isPrivileged ? <AdminUsers /> : <Navigate to="/dashboard" replace />} />
       <Route
         path="/admin/notifications"
