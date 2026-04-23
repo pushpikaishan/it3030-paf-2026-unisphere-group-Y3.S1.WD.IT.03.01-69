@@ -79,4 +79,31 @@ export const userService = {
       throw new Error(message)
     }
   },
+  getTwoFactorStatus: async () => {
+    try {
+      const { data } = await api.get('/security/2fa/status')
+      return data
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Could not load two-factor status'
+      throw new Error(message)
+    }
+  },
+  sendEmailOtp: async () => {
+    try {
+      const { data } = await api.post('/security/2fa/email/send-otp')
+      return data
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Could not send OTP code'
+      throw new Error(message)
+    }
+  },
+  verifyEmailOtp: async (otpCode) => {
+    try {
+      const { data } = await api.post('/security/2fa/email/verify', { otpCode })
+      return data
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Could not verify OTP code'
+      throw new Error(message)
+    }
+  },
 }

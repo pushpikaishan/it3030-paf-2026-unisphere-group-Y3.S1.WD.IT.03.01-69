@@ -8,7 +8,9 @@ const decodeToken = () => {
   if (!token) return null
   try {
     const [, payload] = token.split('.')
-    return JSON.parse(atob(payload))
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')
+    return JSON.parse(atob(padded))
   } catch (e) {
     return null
   }
@@ -32,7 +34,7 @@ export function AuthProvider({ children }) {
         const role = extractRole(me?.role, me?.authorities) || tokenClaims?.role
         const id = me?.id || tokenClaims?.id
         const name = me?.name || tokenClaims?.name
-        const email = me?.email || tokenClaims?.email
+        const email = me?.email || tokenClaims?.email || tokenClaims?.sub
         const profileImage = me?.profileImage || me?.picture || tokenClaims?.picture
 
         setUser({ ...me, role, id, name, email, profileImage })
@@ -43,7 +45,7 @@ export function AuthProvider({ children }) {
             role: tokenClaims.role,
             id: tokenClaims.id,
             name: tokenClaims.name,
-            email: tokenClaims.email,
+            email: tokenClaims.email || tokenClaims.sub,
             profileImage: tokenClaims.picture,
           })
         } else {
@@ -58,7 +60,7 @@ export function AuthProvider({ children }) {
           role: tokenClaims.role,
           id: tokenClaims.id,
           name: tokenClaims.name,
-          email: tokenClaims.email,
+          email: tokenClaims.email || tokenClaims.sub,
           profileImage: tokenClaims.picture,
         })
       } else {
