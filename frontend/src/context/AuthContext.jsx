@@ -87,10 +87,14 @@ export function AuthProvider({ children }) {
 
   const login = async (payload) => {
     const data = await userService.login(payload)
+    if (data?.twoFactorRequired) {
+      setLoading(false)
+      return data
+    }
     // After login, refresh to pull latest profile (including profileImage) from /me
     await refresh()
     setLoading(false)
-    return data
+    return data?.user || data
   }
 
   const logout = async () => {

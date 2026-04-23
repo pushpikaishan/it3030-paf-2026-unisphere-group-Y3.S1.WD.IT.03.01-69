@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import TwoFactorChallengeModal from '../components/TwoFactorChallengeModal'
 import { useAuth } from '../hooks/useAuth'
 import { userService } from '../services/userService'
 import './css/profile.css'
@@ -17,6 +18,8 @@ export default function Profile() {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showTwoFactorModal, setShowTwoFactorModal] = useState(false)
   const [showEmailOtpModal, setShowEmailOtpModal] = useState(false)
+  const [showAppOtpModal, setShowAppOtpModal] = useState(false)
+  const [showActionTwoFactorModal, setShowActionTwoFactorModal] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordStatus, setPasswordStatus] = useState('')
@@ -25,6 +28,16 @@ export default function Profile() {
   const [otpStatus, setOtpStatus] = useState('')
   const [otpExpiresAt, setOtpExpiresAt] = useState(null)
   const [otpRemainingSeconds, setOtpRemainingSeconds] = useState(0)
+  const [appCode, setAppCode] = useState('')
+  const [appStatus, setAppStatus] = useState('')
+  const [appQrUrl, setAppQrUrl] = useState('')
+  const [appSecret, setAppSecret] = useState('')
+  const [appSetupExpiresAt, setAppSetupExpiresAt] = useState(null)
+  const [appSetupRemainingSeconds, setAppSetupRemainingSeconds] = useState(0)
+  const [actionTwoFactorStatus, setActionTwoFactorStatus] = useState('')
+  const [actionChallengeId, setActionChallengeId] = useState('')
+  const [actionChallengeMethods, setActionChallengeMethods] = useState({ email: false, app: false })
+  const [pendingTwoFactorAction, setPendingTwoFactorAction] = useState('')
   const [lastLoginText, setLastLoginText] = useState('No login activity is available yet.')
   const [twoFactorMethods, setTwoFactorMethods] = useState({ email: false, app: false })
   const fileInputRef = useRef(null)
@@ -62,6 +75,18 @@ export default function Profile() {
     const timer = setTimeout(() => setOtpStatus(''), 2500)
     return () => clearTimeout(timer)
   }, [otpStatus])
+
+  useEffect(() => {
+    if (!appStatus) return
+    const timer = setTimeout(() => setAppStatus(''), 2500)
+    return () => clearTimeout(timer)
+  }, [appStatus])
+
+  useEffect(() => {
+    if (!actionTwoFactorStatus) return
+    const timer = setTimeout(() => setActionTwoFactorStatus(''), 2500)
+    return () => clearTimeout(timer)
+  }, [actionTwoFactorStatus])
 
   useEffect(() => {
     if (!user?.id) return
@@ -121,6 +146,17 @@ export default function Profile() {
 
     return () => clearInterval(timer)
   }, [showEmailOtpModal, otpExpiresAt])
+
+  useEffect(() => {
+    if (!showAppOtpModal || !appSetupExpiresAt) return
+
+    const timer = setInterval(() => {
+      const remaining = Math.max(0, Math.floor((appSetupExpiresAt - Date.now()) / 1000))
+      setAppSetupRemainingSeconds(remaining)
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [showAppOtpModal, appSetupExpiresAt])
 
   const avatar = useMemo(() => {
     if (profileImage) {
@@ -191,10 +227,42 @@ export default function Profile() {
     }
   }
 
-  const handleDelete = async () => {
+  const startProtectedActionTwoFactor = async (action) => {
+    try {
+      setSaving(true)
+      setActionTwoFactorStatus('')
+      const challenge = await userService.startProtectedActionChallenge(action)
+      if (!challenge?.twoFactorRequired) {
+        return 'NOT_REQUIRED'
+      }
+      setPendingTwoFactorAction(action)
+      setActionChallengeId(challenge.challengeId)
+      setActionChallengeMethods({
+        email: Boolean(challenge?.methods?.email),
+        app: Boolean(challenge?.methods?.app),
+      })
+      setShowActionTwoFactorModal(true)
+      return 'PENDING'
+    } catch (err) {
+      return `ERROR:${err?.message || 'Could not start two-factor verification.'}`
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (verificationToken = null) => {
     if (!user?.id) {
       setStatus('Missing user id. Please log in again and retry.')
       return
+    }
+
+    if (!verificationToken) {
+      const started = await startProtectedActionTwoFactor('DELETE_ACCOUNT')
+      if (started === 'PENDING') return
+      if (typeof started === 'string' && started.startsWith('ERROR:')) {
+        setStatus(started.replace('ERROR:', ''))
+        return
+      }
     }
 
     const confirmed = window.confirm('Disable your account? It will be scheduled for permanent deletion in 1 month.')
@@ -203,13 +271,18 @@ export default function Profile() {
     setSaving(true)
     setStatus('')
     try {
-      const res = await userService.disable(user.id)
+      const res = await userService.disable(user.id, verificationToken ? { twoFactorToken: verificationToken } : {})
       const message = res?.message || 'Your account has been temporarily disabled. It will be permanently deleted in 1 month.'
       setStatus(message)
       await logout()
       navigate('/login', { state: { message } })
     } catch (err) {
-      setStatus(err?.message || 'Unable to delete account')
+      const message = err?.message || 'Unable to delete account'
+      if (!verificationToken && message.toLowerCase().includes('two-factor verification required')) {
+        const started = await startProtectedActionTwoFactor('DELETE_ACCOUNT')
+        if (started === 'PENDING') return
+      }
+      setStatus(message)
     } finally {
       setSaving(false)
     }
@@ -220,10 +293,19 @@ export default function Profile() {
     navigate('/login')
   }
 
-  const handleChangePassword = async () => {
+  const handleChangePassword = async (verificationToken = null) => {
     if (!user?.id) {
       setPasswordStatus('Missing user id. Please log in again and retry.')
       return
+    }
+
+    if (!verificationToken) {
+      const started = await startProtectedActionTwoFactor('CHANGE_PASSWORD')
+      if (started === 'PENDING') return
+      if (typeof started === 'string' && started.startsWith('ERROR:')) {
+        setPasswordStatus(started.replace('ERROR:', ''))
+        return
+      }
     }
 
     if (!newPassword.trim()) {
@@ -243,14 +325,23 @@ export default function Profile() {
 
     setSaving(true)
     try {
-      const payload = { ...user, name, email, profileImage, password: newPassword }
+      const payload = { ...user, name, email, profileImage, password: newPassword, twoFactorToken: verificationToken }
       await userService.update(user.id, payload)
       setPasswordStatus('Password changed successfully.')
       setShowPasswordModal(false)
       setNewPassword('')
       setConfirmPassword('')
     } catch (err) {
-      setPasswordStatus(err?.message || 'Unable to change password.')
+      const message = err?.message || 'Unable to change password.'
+      if (!verificationToken && message.toLowerCase().includes('two-factor verification required')) {
+        const started = await startProtectedActionTwoFactor('CHANGE_PASSWORD')
+        if (started === 'PENDING') return
+        if (typeof started === 'string' && started.startsWith('ERROR:')) {
+          setPasswordStatus(started.replace('ERROR:', ''))
+          return
+        }
+      }
+      setPasswordStatus(message)
     } finally {
       setSaving(false)
     }
@@ -295,11 +386,123 @@ export default function Profile() {
     }
   }
 
+  const openAuthenticatorSetup = async () => {
+    setAppStatus('')
+    setAppCode('')
+    setAppQrUrl('')
+    setAppSecret('')
+    setAppSetupExpiresAt(null)
+    setAppSetupRemainingSeconds(0)
+    setShowAppOtpModal(true)
+
+    setSaving(true)
+    try {
+      const setup = await userService.setupAuthenticatorApp()
+      setAppQrUrl(setup?.qrUrl || '')
+      setAppSecret(setup?.secret || '')
+      const ttl = Number(setup?.expiresInSeconds) || 300
+      setAppSetupExpiresAt(Date.now() + ttl * 1000)
+      setAppSetupRemainingSeconds(ttl)
+    } catch (err) {
+      setAppStatus(err?.message || 'Could not load authenticator setup.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleVerifyAuthenticatorApp = async () => {
+    if (!appCode.trim()) {
+      setAppStatus('Enter the authenticator app code.')
+      return
+    }
+
+    setSaving(true)
+    try {
+      await userService.verifyAuthenticatorApp(appCode.trim())
+      setTwoFactorMethods((prev) => ({ ...prev, app: true }))
+      setTwoFactorStatus('Authenticator app two-factor is enabled.')
+      setShowAppOtpModal(false)
+      setAppCode('')
+      setAppQrUrl('')
+      setAppSecret('')
+      setAppSetupExpiresAt(null)
+      setAppSetupRemainingSeconds(0)
+    } catch (err) {
+      setAppStatus(err?.message || 'Could not verify authenticator code.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDisableEmailTwoFactor = async () => {
+    setSaving(true)
+    try {
+      await userService.disableEmailTwoFactor()
+      setTwoFactorMethods((prev) => ({ ...prev, email: false }))
+      setTwoFactorStatus('Email two-factor authentication is disabled.')
+    } catch (err) {
+      setTwoFactorStatus(err?.message || 'Could not disable email two-factor.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDisableAuthenticatorApp = async () => {
+    setSaving(true)
+    try {
+      await userService.disableAuthenticatorApp()
+      setTwoFactorMethods((prev) => ({ ...prev, app: false }))
+      setTwoFactorStatus('Authenticator app two-factor is disabled.')
+    } catch (err) {
+      setTwoFactorStatus(err?.message || 'Could not disable authenticator app.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const formatCountdown = (seconds) => {
     const safe = Math.max(0, seconds)
     const mins = Math.floor(safe / 60)
     const secs = safe % 60
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }
+
+  const hasAnyTwoFactorEnabled = twoFactorMethods.email || twoFactorMethods.app
+
+  const handleSendActionChallengeCode = async (method) => {
+    try {
+      setSaving(true)
+      setActionTwoFactorStatus('')
+      const res = await userService.sendProtectedActionCode({ challengeId: actionChallengeId, method })
+      setActionTwoFactorStatus(res?.message || 'Verification code sent.')
+    } catch (err) {
+      setActionTwoFactorStatus(err?.message || 'Could not send verification code.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleVerifyActionChallengeCode = async ({ method, code }) => {
+    try {
+      setSaving(true)
+      setActionTwoFactorStatus('')
+      const res = await userService.verifyProtectedActionCode({ challengeId: actionChallengeId, method, code })
+      const token = res?.verificationToken
+      setShowActionTwoFactorModal(false)
+
+      if (pendingTwoFactorAction === 'CHANGE_PASSWORD') {
+        await handleChangePassword(token)
+      } else if (pendingTwoFactorAction === 'DELETE_ACCOUNT') {
+        await handleDelete(token)
+      }
+
+      setPendingTwoFactorAction('')
+      setActionChallengeId('')
+    } catch (err) {
+      setActionTwoFactorStatus(err?.message || 'Could not verify code.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -404,6 +607,13 @@ export default function Profile() {
               <span className="security-activity-label">Last Login Activity</span>
               <span className="security-activity-value">{lastLoginText}</span>
             </div>
+
+            {hasAnyTwoFactorEnabled && (
+              <div className="security-inline-status">
+                <span className="security-activity-label">Two-Factor Status</span>
+                <span className="method-status enabled">Enabled</span>
+              </div>
+            )}
 
             <div className="modal-actions">
               <button
@@ -511,15 +721,45 @@ export default function Profile() {
                 <span className={`method-status ${twoFactorMethods.email ? 'enabled' : 'disabled'}`}>
                   {twoFactorMethods.email ? 'Enabled' : 'Disabled'}
                 </span>
+                {twoFactorMethods.email && (
+                  <button
+                    className="method-disable-btn"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDisableEmailTwoFactor()
+                    }}
+                    disabled={saving}
+                  >
+                    Disable
+                  </button>
+                )}
               </button>
 
-              <div className="twofactor-card">
+              <button
+                className="twofactor-card twofactor-card-clickable"
+                type="button"
+                onClick={openAuthenticatorSetup}
+              >
                 <h4>Authenticator App</h4>
                 <p>Use Google Authenticator or any compatible TOTP app.</p>
                 <span className={`method-status ${twoFactorMethods.app ? 'enabled' : 'disabled'}`}>
                   {twoFactorMethods.app ? 'Enabled' : 'Disabled'}
                 </span>
-              </div>
+                {twoFactorMethods.app && (
+                  <button
+                    className="method-disable-btn"
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDisableAuthenticatorApp()
+                    }}
+                    disabled={saving}
+                  >
+                    Disable
+                  </button>
+                )}
+              </button>
             </div>
 
             {twoFactorStatus && <div className="status-message">{twoFactorStatus}</div>}
@@ -577,6 +817,71 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      {showAppOtpModal && (
+        <div className="modal-overlay" onClick={() => setShowAppOtpModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="modal-close"
+              type="button"
+              onClick={() => setShowAppOtpModal(false)}
+              aria-label="Close authenticator popup"
+            >
+              x
+            </button>
+            <h3 className="modal-title">Authenticator App Setup</h3>
+            <p className="modal-subtitle">Scan the QR code in Google Authenticator, then enter the 6-digit code.</p>
+
+            {appQrUrl && (
+              <div className="qr-wrap">
+                <img className="qr-image" src={appQrUrl} alt="Authenticator setup QR code" />
+              </div>
+            )}
+
+            {appSecret && (
+              <div className="security-activity">
+                <span className="security-activity-label">Manual Setup Key</span>
+                <span className="security-activity-value secret-code">{appSecret}</span>
+              </div>
+            )}
+
+            {appSetupExpiresAt && (
+              <div className="otp-timer">Setup expires in {formatCountdown(appSetupRemainingSeconds)}</div>
+            )}
+
+            <div className="input-group">
+              <label className="input-label" htmlFor="auth-app-code">Authenticator Code</label>
+              <input
+                id="auth-app-code"
+                type="text"
+                value={appCode}
+                onChange={(e) => setAppCode(e.target.value)}
+                placeholder="Enter 6-digit code"
+              />
+            </div>
+
+            {appStatus && <div className="status-message">{appStatus}</div>}
+
+            <div className="modal-actions">
+              <button className="btn btn-primary" type="button" onClick={handleVerifyAuthenticatorApp} disabled={saving}>
+                {saving ? 'Verifying...' : 'Verify App'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <TwoFactorChallengeModal
+        open={showActionTwoFactorModal}
+        title={pendingTwoFactorAction === 'DELETE_ACCOUNT' ? 'Delete Account Verification' : 'Change Password Verification'}
+        subtitle="Choose a method and verify to continue this action."
+        methods={actionChallengeMethods}
+        status={actionTwoFactorStatus}
+        loading={saving}
+        onClose={() => setShowActionTwoFactorModal(false)}
+        onSendCode={handleSendActionChallengeCode}
+        onVerify={handleVerifyActionChallengeCode}
+      />
     </div>
   )
 }

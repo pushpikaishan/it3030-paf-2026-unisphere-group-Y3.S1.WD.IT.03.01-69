@@ -5,6 +5,7 @@ import com.unisphere.entity.Role;
 import com.unisphere.entity.UserStatus;
 import com.unisphere.repository.UserRepository;
 import com.unisphere.security.JwtService;
+import com.unisphere.service.TwoFactorService;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,12 +28,14 @@ public class AuthController {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final TwoFactorService twoFactorService;
 
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder) {
+    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder, TwoFactorService twoFactorService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
+        this.twoFactorService = twoFactorService;
     }
 
     @PostMapping("/login")
@@ -67,6 +70,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid email or password"));
         }
 
+        if (twoFactorService.hasAnyTwoFactorEnabled(user)) {
+            return ResponseEntity.ok(twoFactorService.startLoginChallenge(user));
+        }
+
         String token = jwtService.generateToken(
             user.getEmail(),
             Map.of(
@@ -88,6 +95,48 @@ public class AuthController {
                 "status", user.getStatus()
             )
         ));
+    }
+
+    @PostMapping("/2fa/send-code")
+    public ResponseEntity<?> sendLoginTwoFactorCode(@RequestBody TwoFactorSendRequest request) {
+        try {
+            return ResponseEntity.ok(twoFactorService.sendChallengeCode(request.getChallengeId(), request.getMethod()));
+        } catch (Exception ex) {
+            String message = ex.getMessage() != null ? ex.getMessage() : "Failed to send verification code";
+            return ResponseEntity.badRequest().body(Map.of("message", message));
+        }
+    }
+
+    @PostMapping("/2fa/verify")
+    public ResponseEntity<?> verifyLoginTwoFactor(@RequestBody TwoFactorVerifyRequest request) {
+        try {
+            User user = twoFactorService.verifyLoginChallenge(request.getChallengeId(), request.getMethod(), request.getCode());
+
+            String token = jwtService.generateToken(
+                user.getEmail(),
+                Map.of(
+                    "id", user.getId(),
+                    "name", user.getName(),
+                    "email", user.getEmail(),
+                    "role", user.getRole().name(),
+                    "status", user.getStatus().name()
+                )
+            );
+
+            return ResponseEntity.ok(Map.of(
+                "token", token,
+                "user", Map.of(
+                    "id", user.getId(),
+                    "name", user.getName(),
+                    "email", user.getEmail(),
+                    "role", user.getRole(),
+                    "status", user.getStatus()
+                )
+            ));
+        } catch (Exception ex) {
+            String message = ex.getMessage() != null ? ex.getMessage() : "Failed to verify code";
+            return ResponseEntity.badRequest().body(Map.of("message", message));
+        }
     }
 
     @PostMapping("/register")
@@ -204,6 +253,57 @@ public class AuthController {
 
         public void setRole(Role role) {
             this.role = role;
+        }
+    }
+
+    public static class TwoFactorSendRequest {
+        private String challengeId;
+        private String method;
+
+        public String getChallengeId() {
+            return challengeId;
+        }
+
+        public void setChallengeId(String challengeId) {
+            this.challengeId = challengeId;
+        }
+
+        public String getMethod() {
+            return method;
+        }
+
+        public void setMethod(String method) {
+            this.method = method;
+        }
+    }
+
+    public static class TwoFactorVerifyRequest {
+        private String challengeId;
+        private String method;
+        private String code;
+
+        public String getChallengeId() {
+            return challengeId;
+        }
+
+        public void setChallengeId(String challengeId) {
+            this.challengeId = challengeId;
+        }
+
+        public String getMethod() {
+            return method;
+        }
+
+        public void setMethod(String method) {
+            this.method = method;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
         }
     }
 }
