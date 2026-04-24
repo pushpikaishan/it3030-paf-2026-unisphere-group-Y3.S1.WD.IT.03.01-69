@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import TwoFactorChallengeModal from '../components/TwoFactorChallengeModal'
+import ForgotPasswordModal from '../components/ForgotPasswordModal'
 import { userService } from '../services/userService'
 import { startGoogleLogin } from '../utils/helpers'
 import heroImg from '../assets/images/SLIIT-malabe.jpg'
@@ -22,6 +23,7 @@ export default function Login() {
   const [twoFactorStatus, setTwoFactorStatus] = useState('')
   const [challengeId, setChallengeId] = useState('')
   const [challengeMethods, setChallengeMethods] = useState({ email: false, app: false })
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
 
   const resetTwoFactorState = () => {
     setShowTwoFactor(false)
@@ -133,6 +135,9 @@ export default function Login() {
             <img className="google-icon" src={googleIconUrl} alt="Google" />
             Continue with Google
           </button>
+          <button className="link-button" type="button" onClick={() => setShowForgotPassword(true)}>
+            Forgot password?
+          </button>
           {error && <p className="error">{error}</p>}
         </form>
         <div className="auth-footer">
@@ -155,6 +160,11 @@ export default function Login() {
         onClose={() => setShowTwoFactor(false)}
         onSendCode={handleSendLoginCode}
         onVerify={handleVerifyLoginCode}
+      />
+
+      <ForgotPasswordModal
+        open={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
       />
     </div>
   )

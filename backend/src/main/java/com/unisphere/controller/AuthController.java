@@ -5,6 +5,7 @@ import com.unisphere.entity.Role;
 import com.unisphere.entity.UserStatus;
 import com.unisphere.repository.UserRepository;
 import com.unisphere.security.JwtService;
+import com.unisphere.service.PasswordResetService;
 import com.unisphere.service.TwoFactorService;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -29,13 +30,15 @@ public class AuthController {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final TwoFactorService twoFactorService;
+    private final PasswordResetService passwordResetService;
 
-    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder, TwoFactorService twoFactorService) {
+    public AuthController(AuthenticationManager authenticationManager, UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder, TwoFactorService twoFactorService, PasswordResetService passwordResetService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.twoFactorService = twoFactorService;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/login")
@@ -135,6 +138,28 @@ public class AuthController {
             ));
         } catch (Exception ex) {
             String message = ex.getMessage() != null ? ex.getMessage() : "Failed to verify code";
+            return ResponseEntity.badRequest().body(Map.of("message", message));
+        }
+    }
+
+    @PostMapping("/forgot-password/send-code")
+    public ResponseEntity<?> sendForgotPasswordCode(@RequestBody ForgotPasswordSendRequest request) {
+        try {
+            return ResponseEntity.ok(passwordResetService.sendResetCode(request.getEmail()));
+        } catch (Exception ex) {
+            String message = ex.getMessage() != null ? ex.getMessage() : "Failed to send reset code";
+            return ResponseEntity.badRequest().body(Map.of("message", message));
+        }
+    }
+
+    @PostMapping("/forgot-password/reset")
+    public ResponseEntity<?> resetForgotPassword(@RequestBody ForgotPasswordResetRequest request) {
+        try {
+            return ResponseEntity.ok(
+                passwordResetService.resetPassword(request.getEmail(), request.getCode(), request.getNewPassword())
+            );
+        } catch (Exception ex) {
+            String message = ex.getMessage() != null ? ex.getMessage() : "Failed to reset password";
             return ResponseEntity.badRequest().body(Map.of("message", message));
         }
     }
@@ -253,6 +278,48 @@ public class AuthController {
 
         public void setRole(Role role) {
             this.role = role;
+        }
+    }
+
+    public static class ForgotPasswordSendRequest {
+        private String email;
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+    }
+
+    public static class ForgotPasswordResetRequest {
+        private String email;
+        private String code;
+        private String newPassword;
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+
+        public String getNewPassword() {
+            return newPassword;
+        }
+
+        public void setNewPassword(String newPassword) {
+            this.newPassword = newPassword;
         }
     }
 

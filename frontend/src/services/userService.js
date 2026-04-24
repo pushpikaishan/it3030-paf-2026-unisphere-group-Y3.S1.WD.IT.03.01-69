@@ -28,6 +28,24 @@ export const userService = {
       throw new Error(message)
     }
   },
+  sendForgotPasswordCode: async ({ email }) => {
+    try {
+      const { data } = await api.post('/auth/forgot-password/send-code', { email })
+      return data
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Could not send password reset code'
+      throw new Error(message)
+    }
+  },
+  resetForgotPassword: async ({ email, code, newPassword }) => {
+    try {
+      const { data } = await api.post('/auth/forgot-password/reset', { email, code, newPassword })
+      return data
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Could not reset password'
+      throw new Error(message)
+    }
+  },
   me: async () => {
     const { data } = await api.get('/me')
     return data
