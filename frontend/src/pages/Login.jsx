@@ -23,6 +23,13 @@ export default function Login() {
   const [challengeId, setChallengeId] = useState('')
   const [challengeMethods, setChallengeMethods] = useState({ email: false, app: false })
 
+  const resetTwoFactorState = () => {
+    setShowTwoFactor(false)
+    setTwoFactorStatus('')
+    setChallengeId('')
+    setChallengeMethods({ email: false, app: false })
+  }
+
   useEffect(() => {
     const message = params.get('error')
     if (message) {
@@ -35,6 +42,7 @@ export default function Login() {
     try {
       setError('')
       setLoading(true)
+      resetTwoFactorState()
       const loggedIn = await login(form)
       if (loggedIn?.twoFactorRequired) {
         setChallengeId(loggedIn.challengeId)
@@ -52,6 +60,11 @@ export default function Login() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoogleSignIn = () => {
+    resetTwoFactorState()
+    startGoogleLogin()
   }
 
   const handleSendLoginCode = async (method) => {
@@ -116,7 +129,7 @@ export default function Login() {
           <button className="button" type="submit">
             {loading ? 'Please wait...' : 'Login'}
           </button>
-          <button className="ghost google-btn" type="button" onClick={() => startGoogleLogin()}>
+          <button className="ghost google-btn" type="button" onClick={handleGoogleSignIn}>
             <img className="google-icon" src={googleIconUrl} alt="Google" />
             Continue with Google
           </button>
