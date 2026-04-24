@@ -152,6 +152,16 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/forgot-password/verify-code")
+    public ResponseEntity<?> verifyForgotPasswordCode(@RequestBody ForgotPasswordVerifyRequest request) {
+        try {
+            return ResponseEntity.ok(passwordResetService.verifyResetCode(request.getEmail(), request.getCode()));
+        } catch (Exception ex) {
+            String message = ex.getMessage() != null ? ex.getMessage() : "Failed to verify reset code";
+            return ResponseEntity.badRequest().body(Map.of("message", message));
+        }
+    }
+
     @PostMapping("/forgot-password/reset")
     public ResponseEntity<?> resetForgotPassword(@RequestBody ForgotPasswordResetRequest request) {
         try {
@@ -320,6 +330,27 @@ public class AuthController {
 
         public void setNewPassword(String newPassword) {
             this.newPassword = newPassword;
+        }
+    }
+
+    public static class ForgotPasswordVerifyRequest {
+        private String email;
+        private String code;
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
         }
     }
 

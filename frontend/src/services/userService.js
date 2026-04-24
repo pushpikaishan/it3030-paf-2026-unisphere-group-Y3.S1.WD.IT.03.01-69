@@ -37,6 +37,15 @@ export const userService = {
       throw new Error(message)
     }
   },
+  verifyForgotPasswordCode: async ({ email, code }) => {
+    try {
+      const { data } = await api.post('/auth/forgot-password/verify-code', { email, code })
+      return data
+    } catch (err) {
+      const message = err?.response?.data?.message || 'Could not verify password reset code'
+      throw new Error(message)
+    }
+  },
   resetForgotPassword: async ({ email, code, newPassword }) => {
     try {
       const { data } = await api.post('/auth/forgot-password/reset', { email, code, newPassword })

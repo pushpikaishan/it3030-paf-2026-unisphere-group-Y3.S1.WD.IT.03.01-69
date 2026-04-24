@@ -84,6 +84,26 @@ public class PasswordResetService {
             throw new IllegalArgumentException("Password must be at least 6 characters");
         }
 
+        ResetSession session = validateResetCode(email, code);
+
+        String key = email.trim().toLowerCase();
+
+        User user = userRepository.findByEmail(session.email)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        resetSessions.remove(key);
+
+        return Map.of("message", "Password updated successfully.");
+    }
+
+    public Map<String, Object> verifyResetCode(String email, String code) {
+        validateResetCode(email, code);
+        return Map.of("message", "Code verified successfully.");
+    }
+
+    private ResetSession validateResetCode(String email, String code) {
         String key = email.trim().toLowerCase();
         ResetSession session = resetSessions.get(key);
         if (session == null) {
@@ -99,14 +119,7 @@ public class PasswordResetService {
             throw new IllegalArgumentException("Invalid reset code.");
         }
 
-        User user = userRepository.findByEmail(session.email)
-            .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-        resetSessions.remove(key);
-
-        return Map.of("message", "Password updated successfully.");
+        return session;
     }
 
     private static class ResetSession {
