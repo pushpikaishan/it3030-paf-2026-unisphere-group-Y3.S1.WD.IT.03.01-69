@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import NotificationPanel from './NotificationPanel'
 import logo from '../assets/images/unisphere.png'
@@ -7,11 +7,14 @@ import bell from '../assets/images/normelbell.png'
 
 export default function Navbar() {
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
   const { pathname } = useLocation()
-  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const isPrivileged = user?.role === 'ADMIN' || user?.role === 'MANAGER'
   const isTechnician = user?.role === 'TECHNICIAN'
   const onAdminPage = pathname.startsWith('/admin')
+  const menuRef = useRef(null)
   const avatar =
     user?.profileImage || user?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}`
 
@@ -36,6 +39,26 @@ export default function Navbar() {
   const links = isPrivileged && onAdminPage ? adminNav : defaultNav
   const brandHref = isPrivileged && onAdminPage ? '/admin/dashboard' : '/'
   const notifications = user?.notifications || []
+  const profileHref = onAdminPage ? '/admin/profile' : '/profile'
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowNotifications(false)
+        setShowProfileMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [])
+
+  const handleLogout = async () => {
+    setShowProfileMenu(false)
+    setShowNotifications(false)
+    await logout()
+    navigate('/login')
+  }
 
   return (
     <header className="navbar">
@@ -50,20 +73,47 @@ export default function Navbar() {
           </Link>
         ))}
       </nav>
-      <div className="nav-session">
+      <div className="nav-session" ref={menuRef}>
         <button
           type="button"
           className="nav-bell-btn"
-          onClick={() => setShowNotifications((prev) => !prev)}
+          onClick={() => {
+            setShowNotifications((prev) => !prev)
+            setShowProfileMenu(false)
+          }}
           aria-label="Toggle notifications"
         >
           <img className="nav-bell" src={bell} alt="Notifications" />
         </button>
         {user && (
-          <Link className="nav-profile" to="/profile">
-            <img className="nav-avatar" src={avatar} alt="Profile avatar" />
-            <span className="nav-user">{user?.name || user?.email || 'Profile'}</span>
-          </Link>
+          <>
+            <button
+              type="button"
+              className="nav-profile-trigger"
+              onClick={() => {
+                setShowProfileMenu((prev) => !prev)
+                setShowNotifications(false)
+              }}
+              aria-label="Open profile menu"
+              aria-expanded={showProfileMenu}
+            >
+              <img className="nav-avatar" src={avatar} alt="Profile avatar" />
+              <span className="nav-user">{user?.name || user?.email || 'Profile'}</span>
+              <span className="nav-caret" aria-hidden="true">
+                ▾
+              </span>
+            </button>
+            {showProfileMenu && (
+              <div className="nav-dropdown nav-profile-menu">
+                <Link className="nav-dropdown__item" to={profileHref} onClick={() => setShowProfileMenu(false)}>
+                  Profile
+                </Link>
+                <button className="nav-dropdown__item nav-dropdown__item--danger" type="button" onClick={handleLogout}>
+                  Logout
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
       {showNotifications && (

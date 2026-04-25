@@ -8,7 +8,7 @@ function App() {
   const { pathname } = useLocation()
   const showSidebar = pathname.startsWith('/admin')
   const hideNavbarRoutes = ['/pending/technician', '/login', '/register', '/contact-admin']
-  const showNavbar = !showSidebar && !hideNavbarRoutes.includes(pathname)
+  const showNavbar = !hideNavbarRoutes.includes(pathname)
 
   return (
     <div className="layout">
