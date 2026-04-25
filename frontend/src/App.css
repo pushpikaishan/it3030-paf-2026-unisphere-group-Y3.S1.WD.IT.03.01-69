@@ -880,3 +880,152 @@ code {
     grid-column: span 1;
   }
 }
+
+/* Dual Forms Module - Booking and Maintenance */
+.forms-shell {
+  display: grid;
+  gap: 20px;
+}
+
+.forms-hero {
+  display: grid;
+  gap: 8px;
+}
+
+.forms-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.forms-section {
+  display: grid;
+  gap: 0;
+}
+
+/* Maintenance Form Styles */
+.maintenance-form {
+  gap: 16px;
+  border-left: 4px solid #d97706;
+}
+
+.maintenance-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.maintenance-form__span-2 {
+  grid-column: span 2;
+}
+
+.maintenance-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.maintenance-alert {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
+.maintenance-alert--success {
+  background: #ecfdf3;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.maintenance-alert--error {
+  background: #fff4ee;
+  color: #b45309;
+  border: 1px solid #fed7aa;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin: -2px 0 4px 0;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #053769;
+  font-size: 18px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.booking-form h3 {
+  color: #016bae;
+}
+
+.maintenance-form h3 {
+  color: #d97706;
+}
+
+.forms-info {
+  display: grid;
+  gap: 16px;
+}
+
+.forms-info h3 {
+  margin: 0;
+  color: #053769;
+}
+
+.forms-info__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.forms-info__grid h4 {
+  margin: 0 0 8px 0;
+  color: #016bae;
+  font-size: 16px;
+}
+
+.forms-info__grid p {
+  margin: 0;
+  color: #5f6b7a;
+  line-height: 1.6;
+}
+
+.button--primary {
+  background: linear-gradient(135deg, #016bae, #053769);
+  color: #ffffff;
+  border: none;
+}
+
+.button--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(1, 107, 174, 0.25);
+}
+
+@media (max-width: 1024px) {
+  .forms-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .maintenance-form__grid,
+  .booking-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .maintenance-form__span-2,
+  .booking-form__span-2 {
+    grid-column: span 1;
+  }
+
+  .forms-info__grid {
+    grid-template-columns: 1fr;
+  }
+}
