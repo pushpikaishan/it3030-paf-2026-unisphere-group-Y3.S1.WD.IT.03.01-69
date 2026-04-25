@@ -5,6 +5,7 @@ import com.unisphere.entity.User;
 import com.unisphere.repository.NotificationRepository;
 import com.unisphere.repository.UserRepository;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,8 @@ public class NotificationService {
     }
 
     public List<Notification> findByUserId(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepository.findById(Objects.requireNonNull(userId, "User id is required"))
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
         return notificationRepository.findByUser(user);
     }
 
@@ -34,7 +36,8 @@ public class NotificationService {
     }
 
     public Notification create(Notification notification, Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepository.findById(Objects.requireNonNull(userId, "User id is required"))
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
         notification.setUser(user);
         return notificationRepository.save(notification);
     }

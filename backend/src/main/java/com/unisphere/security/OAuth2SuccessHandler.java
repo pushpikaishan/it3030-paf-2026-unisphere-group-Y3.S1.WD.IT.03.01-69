@@ -6,6 +6,7 @@ import com.unisphere.entity.UserStatus;
 import com.unisphere.service.UserService;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -53,9 +54,17 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         clearRoleCookie(response);
 
+        String redirectBase = Objects.requireNonNull(frontendRedirectUri, "Frontend redirect URI is required");
+        String savedEmail = Objects.requireNonNull(saved.getEmail(), "OAuth user email is required");
+        String savedName = Objects.requireNonNull(saved.getName(), "OAuth user name is required");
+        Role savedRole = Objects.requireNonNull(saved.getRole(), "OAuth user role is required");
+        UserStatus savedStatus = Objects.requireNonNull(saved.getStatus(), "OAuth user status is required");
+        String provider = Objects.requireNonNull(saved.getProvider(), "OAuth user provider is required").name();
+        String savedPicture = saved.getProfileImage();
+
         // If the account is pending (e.g., technician flow), do not log in; send the user back with a pending flag.
-        if (saved.getStatus() == UserStatus.PENDING) {
-            String pendingRedirect = UriComponentsBuilder.fromUriString(frontendRedirectUri)
+        if (savedStatus == UserStatus.PENDING) {
+            String pendingRedirect = UriComponentsBuilder.fromUriString(redirectBase)
                 .queryParam("pending", true)
                 .build()
                 .encode(StandardCharsets.UTF_8)
@@ -66,19 +75,19 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         }
 
         String token = jwtService.generateToken(
-            saved.getEmail(),
+            savedEmail,
             Map.of(
                 "id", saved.getId(),
-                "name", saved.getName(),
-                "email", saved.getEmail(),
-                "role", saved.getRole().name(),
-                "status", saved.getStatus().name(),
-                "picture", saved.getProfileImage(),
-                "provider", saved.getProvider().name()
+                "name", savedName,
+                "email", savedEmail,
+                "role", savedRole.name(),
+                "status", savedStatus.name(),
+                "picture", savedPicture,
+                "provider", provider
             )
         );
 
-        String redirectUrl = UriComponentsBuilder.fromUriString(frontendRedirectUri)
+        String redirectUrl = UriComponentsBuilder.fromUriString(redirectBase)
             .queryParam("token", token)
             .build()
             .encode(StandardCharsets.UTF_8)

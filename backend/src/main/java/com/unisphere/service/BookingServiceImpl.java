@@ -151,11 +151,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private User resolveManagedUser(User currentUser) {
-        if (currentUser.getId() != null) {
-            return userRepository.findById(currentUser.getId())
+        User user = Objects.requireNonNull(currentUser, "Current user is required");
+        if (user.getId() != null) {
+            return userRepository.findById(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         }
-        return userRepository.findByEmail(currentUser.getEmail())
+        String email = Objects.requireNonNull(user.getEmail(), "Current user email is required");
+        return userRepository.findByEmail(email)
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 }

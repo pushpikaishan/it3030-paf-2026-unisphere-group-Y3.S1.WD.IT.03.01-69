@@ -6,6 +6,7 @@ import com.unisphere.entity.User;
 import com.unisphere.entity.UserStatus;
 import com.unisphere.repository.UserRepository;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,11 @@ public class UserService {
         if (user.getProvider() == AuthProvider.LOCAL && (user.getPassword() == null || user.getPassword().isBlank())) {
             throw new IllegalArgumentException("Password is required for local users");
         }
-        if (userRepository.existsByEmail(user.getEmail())) {
+        String email = Objects.requireNonNull(user.getEmail(), "Email is required");
+        if (email.isBlank()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+        if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already exists");
         }
         if (user.getStatus() == null) {
@@ -72,6 +77,7 @@ public class UserService {
     }
 
     public User upsertOAuthUser(String googleId, String name, String email, String pictureUrl, Role desiredRole, UserStatus desiredStatus) {
+        String resolvedEmail = Objects.requireNonNull(email, "Email is required");
         Role targetRole = desiredRole != null ? desiredRole : Role.USER;
         UserStatus targetStatus;
         if (desiredStatus != null) {
@@ -83,7 +89,7 @@ public class UserService {
         }
 
         return userRepository
-            .findByEmail(email)
+            .findByEmail(resolvedEmail)
             .map(existing -> {
                 existing.setName(name);
                 existing.setProfileImage(pictureUrl);

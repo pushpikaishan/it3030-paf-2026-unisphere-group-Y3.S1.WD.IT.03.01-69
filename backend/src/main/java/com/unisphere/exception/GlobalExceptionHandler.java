@@ -3,6 +3,7 @@ package com.unisphere.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
+import org.springframework.lang.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -48,7 +49,7 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", request.getRequestURI());
     }
 
-    private ResponseEntity<ApiErrorResponse> build(HttpStatus status, String message, String path) {
+    private ResponseEntity<ApiErrorResponse> build(@NonNull HttpStatus status, @NonNull String message, @NonNull String path) {
         return ResponseEntity.status(status).body(new ApiErrorResponse(
             LocalDateTime.now(),
             status.value(),

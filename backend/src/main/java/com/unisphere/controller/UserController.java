@@ -160,7 +160,7 @@ public class UserController {
             }
         }
 
-        User updated = userService.disable(existing.getId());
+        User updated = userService.disable(id);
         return ResponseEntity.ok(Map.of(
             "message", "Account temporarily disabled. It will be deleted permanently in 1 month.",
             "user", updated
