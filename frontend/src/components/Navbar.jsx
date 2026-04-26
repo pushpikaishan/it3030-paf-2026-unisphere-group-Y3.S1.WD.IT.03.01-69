@@ -29,7 +29,6 @@ export default function Navbar() {
     { to: '/resources', label: 'Resources' },
     { to: '/tickets', label: 'Tickets' },
     ...(isTechnician ? [{ to: '/restoration', label: 'Restoration' }] : []),
-    ...(isPrivileged ? [{ to: '/admin', label: 'Admin' }] : []),
   ]
 
   const links = isPrivileged && onAdminPage ? adminNav : defaultNav

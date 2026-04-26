@@ -3,6 +3,7 @@ import Loader from '../components/Loader'
 import Dashboard from '../pages/Dashboard'
 import BookingPage from '../pages/BookingPage'
 import ResourcePage from '../pages/ResourcePage'
+import ResourceDetailPage from '../pages/ResourceDetailPage'
 import TicketPage from '../pages/TicketPage'
 import Login from '../pages/Login'
 import Register from '../pages/Register'
@@ -33,6 +34,7 @@ export default function AppRoutes() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/bookings" element={<BookingPage />} />
       <Route path="/resources" element={<ResourcePage />} />
+      <Route path="/resources/:id" element={<ResourceDetailPage />} />
       <Route path="/tickets" element={<TicketPage />} />
       <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" replace />} />
       <Route
