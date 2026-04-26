@@ -6,6 +6,11 @@ export const useResources = (params) =>
     queryKey: ['resources', params],
     queryFn: () => resourceApi.getResources(params),
     staleTime: 15000,
+    retry: (failureCount, error) => {
+      const status = error?.response?.status
+      if (status === 401 || status === 403) return false
+      return failureCount < 2
+    },
   })
 
 export const useResource = (id) =>
@@ -20,6 +25,11 @@ export const useResourceTypes = () =>
     queryKey: ['resource-types'],
     queryFn: resourceApi.getResourceTypes,
     staleTime: 5 * 60 * 1000,
+    retry: (failureCount, error) => {
+      const status = error?.response?.status
+      if (status === 401 || status === 403) return false
+      return failureCount < 2
+    },
   })
 
 export const useCreateResource = () => {

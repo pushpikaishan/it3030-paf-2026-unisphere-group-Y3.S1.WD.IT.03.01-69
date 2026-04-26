@@ -73,6 +73,11 @@
   margin-top: 4px;
 }
 
+.resource-card-actions .btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .resource-status {
   display: inline-flex;
   align-items: center;
@@ -259,6 +264,45 @@
 }
 
 .resource-detail-grid p {
+  margin: 0;
+  color: #4b6077;
+}
+
+.booking-page {
+  display: grid;
+  gap: 16px;
+}
+
+.booking-table-wrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.booking-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+}
+
+.booking-table th,
+.booking-table td {
+  text-align: left;
+  border-bottom: 1px solid #e0e7ff;
+  padding: 10px;
+}
+
+.booking-table th {
+  color: #0a2c5a;
+  font-size: 14px;
+}
+
+.booking-actions-cell {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.booking-details p {
   margin: 0;
   color: #4b6077;
 }

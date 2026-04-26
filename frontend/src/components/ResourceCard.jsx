@@ -1,7 +1,16 @@
 import { Link } from 'react-router-dom'
 import ResourceStatusBadge from './ResourceStatusBadge'
 
-export default function ResourceCard({ resource, isAdmin, onEdit, onDelete, onToggleStatus }) {
+export default function ResourceCard({
+  resource,
+  isAdmin,
+  onEdit,
+  onDelete,
+  onToggleStatus,
+  onBookNow,
+  canBook,
+  isBooked,
+}) {
   return (
     <article className="resource-card">
       <div className="resource-card-top">
@@ -17,6 +26,12 @@ export default function ResourceCard({ resource, isAdmin, onEdit, onDelete, onTo
         <Link className="btn ghost" to={`/resources/${resource.id}`}>
           View details
         </Link>
+
+        {!isAdmin && (
+          <button className="btn primary" type="button" onClick={() => onBookNow?.(resource)} disabled={!canBook || isBooked}>
+            {isBooked ? 'Booked' : 'Book Now'}
+          </button>
+        )}
 
         {isAdmin && (
           <>
