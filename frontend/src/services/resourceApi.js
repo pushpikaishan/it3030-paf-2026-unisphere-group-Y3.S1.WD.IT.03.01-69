@@ -13,6 +13,10 @@ export const resourceApi = {
     const { data } = await api.get('/resources/types')
     return data
   },
+  getMySelectedResources: async () => {
+    const { data } = await api.get('/resources/my-selections')
+    return data
+  },
   createResource: async (payload) => {
     const { data } = await api.post('/resources', payload)
     return data

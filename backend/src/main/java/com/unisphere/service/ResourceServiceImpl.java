@@ -11,6 +11,8 @@ import com.unisphere.exception.DuplicateResourceException;
 import com.unisphere.exception.ResourceHasActiveBookingsException;
 import com.unisphere.exception.ResourceNotFoundException;
 import com.unisphere.repository.ResourceRepository;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
@@ -141,6 +143,44 @@ public class ResourceServiceImpl implements ResourceService {
         return toResponse(resourceRepository.save(existing));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ResourceResponseDTO> getSelectedResourcesForUser(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+
+        try {
+            return jdbcTemplate.query(
+                """
+                SELECT DISTINCT r.id, r.name, r.type, r.capacity, r.location, r.availability_windows,
+                                r.status, r.description, r.image_url, r.created_at, r.updated_at
+                FROM bookings b
+                JOIN resources r ON r.id = b.resource_id
+                WHERE b.user_id = ?
+                  AND (b.status IS NULL OR UPPER(b.status) NOT IN ('CANCELLED', 'COMPLETED', 'REJECTED'))
+                ORDER BY r.name ASC
+                """,
+                (rs, rowNum) -> ResourceResponseDTO.builder()
+                    .id(rs.getLong("id"))
+                    .name(rs.getString("name"))
+                    .type(parseResourceType(rs.getString("type")))
+                    .capacity(rs.getObject("capacity", Integer.class))
+                    .location(rs.getString("location"))
+                    .availabilityWindows(rs.getString("availability_windows"))
+                    .status(parseResourceStatus(rs.getString("status")))
+                    .description(rs.getString("description"))
+                    .imageUrl(rs.getString("image_url"))
+                    .createdAt(rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime() : null)
+                    .updatedAt(rs.getTimestamp("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null)
+                    .build(),
+                userId
+            );
+        } catch (DataAccessException ex) {
+            return new ArrayList<>();
+        }
+    }
+
     private Resource findResource(Long id) {
         return resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
     }
@@ -161,6 +201,28 @@ public class ResourceServiceImpl implements ResourceService {
             return count != null && count > 0;
         } catch (DataAccessException ex) {
             return false;
+        }
+    }
+
+    private ResourceType parseResourceType(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return ResourceType.valueOf(value.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private ResourceStatus parseResourceStatus(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return ResourceStatus.valueOf(value.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return null;
         }
     }
 

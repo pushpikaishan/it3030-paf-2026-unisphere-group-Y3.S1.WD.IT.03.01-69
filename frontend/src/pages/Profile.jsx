@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { resourceApi } from '../services/resourceApi'
 import { userService } from '../services/userService'
 import './css/profile.css'
 
@@ -16,6 +18,8 @@ export default function Profile() {
   const [showPasswordFields, setShowPasswordFields] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [selectedResources, setSelectedResources] = useState([])
+  const [resourcesLoading, setResourcesLoading] = useState(false)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -33,6 +37,27 @@ export default function Profile() {
     const timer = setTimeout(() => setStatus(''), 2000)
     return () => clearTimeout(timer)
   }, [status])
+
+  useEffect(() => {
+    const loadSelectedResources = async () => {
+      if (!user?.id) {
+        setSelectedResources([])
+        return
+      }
+
+      setResourcesLoading(true)
+      try {
+        const data = await resourceApi.getMySelectedResources()
+        setSelectedResources(Array.isArray(data) ? data : [])
+      } catch {
+        setSelectedResources([])
+      } finally {
+        setResourcesLoading(false)
+      }
+    }
+
+    loadSelectedResources()
+  }, [user?.id])
 
   const avatar = useMemo(() => {
     if (profileImage) {
@@ -188,6 +213,33 @@ export default function Profile() {
             </div>
           </div>
         )}
+
+        <div className="profile-selected card-like">
+          <h3>Selected Resources</h3>
+          {resourcesLoading && <p className="selected-muted">Loading your selected resources...</p>}
+
+          {!resourcesLoading && selectedResources.length === 0 && (
+            <p className="selected-muted">No selected resources found for your account.</p>
+          )}
+
+          {!resourcesLoading && selectedResources.length > 0 && (
+            <ul className="selected-resource-list">
+              {selectedResources.map((resource) => (
+                <li key={resource.id} className="selected-resource-item">
+                  <div>
+                    <p className="selected-resource-name">{resource.name}</p>
+                    <p className="selected-resource-meta">
+                      {resource.type?.replaceAll('_', ' ') || 'N/A'} | {resource.location || 'No location'}
+                    </p>
+                  </div>
+                  <Link className="selected-resource-link" to={`/resources/${resource.id}`}>
+                    View
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
         {editing && (
           <>
