@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useBookings } from '../hooks/useBookings'
@@ -107,5 +108,6 @@ export default function BookingPage() {
         </div>
       )}
     </div>
+
   )
 }

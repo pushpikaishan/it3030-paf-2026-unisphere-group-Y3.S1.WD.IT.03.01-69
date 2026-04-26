@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import Loader from '../components/Loader'
 import Dashboard from '../pages/Dashboard'
 import BookingPage from '../pages/BookingPage'
+import MyBookingsPage from '../pages/MyBookingsPage'
 import ResourcePage from '../pages/ResourcePage'
 import ResourceDetailPage from '../pages/ResourceDetailPage'
 import TicketPage from '../pages/TicketPage'
@@ -32,7 +33,8 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/" element={<Navigate to={user ? authedHome : '/login'} replace />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/bookings" element={<BookingPage />} />
+      <Route path="/bookings" element={user ? <BookingPage /> : <Navigate to="/login" replace />} />
+      <Route path="/my-bookings" element={user ? <MyBookingsPage /> : <Navigate to="/login" replace />} />
       <Route path="/resources" element={<ResourcePage />} />
       <Route path="/resources/:id" element={<ResourceDetailPage />} />
       <Route path="/tickets" element={<TicketPage />} />

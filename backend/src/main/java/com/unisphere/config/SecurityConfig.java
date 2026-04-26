@@ -59,6 +59,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password/reset").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/2fa/send-code").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/2fa/verify").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/support-requests").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/me").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/resources/**").hasAnyRole("ADMIN", "MANAGER")
@@ -110,9 +111,9 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("removal")
     public DaoAuthenticationProvider daoAuthenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(userDetailsService);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
