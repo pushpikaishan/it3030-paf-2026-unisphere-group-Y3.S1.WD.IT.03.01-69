@@ -56,6 +56,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password/reset").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/2fa/send-code").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/2fa/verify").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/support-requests").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/me").permitAll()
                 .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
