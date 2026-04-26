@@ -3,6 +3,7 @@ package com.unisphere.security;
 import com.unisphere.entity.Role;
 import com.unisphere.entity.User;
 import com.unisphere.entity.UserStatus;
+import com.unisphere.service.TwoFactorService;
 import com.unisphere.service.UserService;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,13 +24,15 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final JwtService jwtService;
     private final UserService userService;
+    private final TwoFactorService twoFactorService;
 
     @Value("${app.oauth2.redirect-uri:http://localhost:5173/oauth/callback}")
     private String frontendRedirectUri;
 
-    public OAuth2SuccessHandler(JwtService jwtService, UserService userService) {
+    public OAuth2SuccessHandler(JwtService jwtService, UserService userService, TwoFactorService twoFactorService) {
         this.jwtService = jwtService;
         this.userService = userService;
+        this.twoFactorService = twoFactorService;
     }
 
     @Override
@@ -62,6 +65,26 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 .toUriString();
 
             getRedirectStrategy().sendRedirect(request, response, pendingRedirect);
+            return;
+        }
+
+        if (twoFactorService.hasAnyTwoFactorEnabled(saved)) {
+            Map<String, Object> challenge = twoFactorService.startLoginChallenge(saved);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> methods = (Map<String, Object>) challenge.get("methods");
+            boolean emailEnabled = Boolean.TRUE.equals(methods.get("email"));
+            boolean appEnabled = Boolean.TRUE.equals(methods.get("app"));
+
+            String challengeRedirect = UriComponentsBuilder.fromUriString(frontendRedirectUri)
+                .queryParam("twoFactorRequired", true)
+                .queryParam("challengeId", challenge.get("challengeId"))
+                .queryParam("emailMethod", emailEnabled)
+                .queryParam("appMethod", appEnabled)
+                .build()
+                .encode(StandardCharsets.UTF_8)
+                .toUriString();
+
+            getRedirectStrategy().sendRedirect(request, response, challengeRedirect);
             return;
         }
 

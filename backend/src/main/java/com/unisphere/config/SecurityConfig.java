@@ -51,6 +51,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password/send-code").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password/verify-code").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password/reset").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/2fa/send-code").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/2fa/verify").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/me").permitAll()
                 .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
@@ -75,8 +80,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:5173"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "X-2FA-Token"));
+        develop
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

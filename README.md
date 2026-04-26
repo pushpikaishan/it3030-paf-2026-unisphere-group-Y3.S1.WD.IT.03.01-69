@@ -74,6 +74,26 @@ macOS/Linux:
 
 Backend should start on port 8085.
 
+## Database Schema Changes (Team Safe)
+
+This project now uses Flyway migrations to keep every developer's database schema in sync automatically.
+
+How it works:
+- Migration files live in backend/src/main/resources/db/migration
+- Files are versioned like: V1__init_schema.sql, V2__add_booking_table.sql, V3__add_index_to_users.sql
+- On backend startup, Flyway runs any new migration files in order
+- Each migration runs once per database and is tracked in flyway_schema_history
+
+Team workflow:
+1. Never change production/local schema manually in MySQL Workbench for shared changes.
+2. Create a new migration SQL file for each schema change.
+3. Commit that migration file with your code.
+4. Other developers just pull and run backend; schema updates happen automatically.
+
+Notes:
+- Existing databases are baselined automatically (baseline-on-migrate=true), so old local DBs can adopt Flyway without reset.
+- spring.jpa.hibernate.ddl-auto is set to none to avoid uncontrolled schema drift.
+
 ## Frontend Setup (React + Vite)
 
 1. Open a second terminal and go to frontend folder:
