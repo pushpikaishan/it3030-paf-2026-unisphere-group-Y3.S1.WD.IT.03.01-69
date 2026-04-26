@@ -16,9 +16,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,9 +32,16 @@ public class BookingController {
 
     private final BookingService bookingService;
 
-    @PostMapping("/request")
+    @PostMapping
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<BookingResponseDTO> requestBooking(@Valid @RequestBody BookingRequestDTO request, Authentication authentication) {
+        BookingResponseDTO created = bookingService.requestBooking(request, authentication.getName());
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping("/request")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<BookingResponseDTO> requestBookingLegacy(@Valid @RequestBody BookingRequestDTO request, Authentication authentication) {
         BookingResponseDTO created = bookingService.requestBooking(request, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -63,21 +71,27 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.getBookingById(id, authentication.getName(), isAdmin));
     }
 
-    @PatchMapping("/{id}/approve")
+    @RequestMapping(path = "/{id}/approve", method = {RequestMethod.PUT, RequestMethod.PATCH})
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookingResponseDTO> approveBooking(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.approveBooking(id));
     }
 
-    @PatchMapping("/{id}/reject")
+    @RequestMapping(path = "/{id}/reject", method = {RequestMethod.PUT, RequestMethod.PATCH})
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookingResponseDTO> rejectBooking(@PathVariable Long id, @Valid @RequestBody BookingDecisionDTO request) {
         return ResponseEntity.ok(bookingService.rejectBooking(id, request.getReason()));
     }
 
-    @PatchMapping("/{id}/cancel")
+    @PutMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BookingResponseDTO> adminCancelBooking(@PathVariable Long id) {
+        return ResponseEntity.ok(bookingService.adminCancelBooking(id));
+    }
+
+    @RequestMapping(path = {"/{id}/cancel", "/{id}/cancel/self"}, method = RequestMethod.PATCH)
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    public ResponseEntity<BookingResponseDTO> cancelBooking(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<BookingResponseDTO> cancelBookingLegacy(@PathVariable Long id, Authentication authentication) {
         boolean isAdmin = hasRole(authentication, "ROLE_ADMIN");
         return ResponseEntity.ok(bookingService.cancelBooking(id, authentication.getName(), isAdmin));
     }

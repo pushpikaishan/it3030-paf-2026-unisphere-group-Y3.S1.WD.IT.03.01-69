@@ -23,12 +23,14 @@ public class BookingResponseDTO {
     private Long userId;
     private String userName;
     private String userEmail;
+    private LocalDate date;
     private LocalDate bookingDate;
     private LocalTime startTime;
     private LocalTime endTime;
     private String purpose;
     private Integer expectedAttendees;
     private BookingStatus status;
+    private String rejectionReason;
     private String adminReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -23,5 +23,7 @@ public interface BookingService {
 
     BookingResponseDTO cancelBooking(Long id, String requesterEmail, boolean isAdmin);
 
+    BookingResponseDTO adminCancelBooking(Long id);
+
     void deleteBooking(Long id);
 }

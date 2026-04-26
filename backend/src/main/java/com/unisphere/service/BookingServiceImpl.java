@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.AccessDeniedException;
@@ -34,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class BookingServiceImpl implements BookingService {
 
-    private static final String CONFLICT_MESSAGE = "This resource is already booked for the selected time.";
+    private static final String CONFLICT_MESSAGE = "Time slot already booked for this resource";
 
     private final BookingRepository bookingRepository;
     private final ResourceRepository resourceRepository;
@@ -80,7 +81,7 @@ public class BookingServiceImpl implements BookingService {
     public Page<BookingResponseDTO> getAllBookings(BookingStatus status, Long resourceId, LocalDate bookingDate, int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
-        Pageable pageable = PageRequest.of(safePage, safeSize);
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Specification<Booking> specification = (root, query, cb) -> cb.conjunction();
 
@@ -188,6 +189,27 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public BookingResponseDTO adminCancelBooking(Long id) {
+        Booking booking = findBooking(id);
+
+        if (booking.getStatus() != BookingStatus.APPROVED) {
+            throw new IllegalArgumentException("Only approved bookings can be cancelled");
+        }
+
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking.setAdminReason("Cancelled by admin");
+
+        Booking updated = bookingRepository.save(booking);
+        notifyUser(
+            updated.getUser().getId(),
+            "Booking Cancelled",
+            buildStatusMessage(updated, "cancelled")
+        );
+
+        return toResponse(updated);
+    }
+
+    @Override
     public void deleteBooking(Long id) {
         Booking booking = findBooking(id);
         bookingRepository.delete(Objects.requireNonNull(booking));
@@ -222,7 +244,7 @@ public class BookingServiceImpl implements BookingService {
         boolean conflict = bookingRepository.existsByResourceIdAndBookingDateAndStatusInAndStartTimeLessThanAndEndTimeGreaterThan(
             resourceId,
             bookingDate,
-            List.of(BookingStatus.PENDING, BookingStatus.APPROVED),
+            List.of(BookingStatus.APPROVED),
             endTime,
             startTime
         );
@@ -275,12 +297,14 @@ public class BookingServiceImpl implements BookingService {
             .userId(booking.getUser().getId())
             .userName(booking.getUser().getName())
             .userEmail(booking.getUser().getEmail())
+            .date(booking.getBookingDate())
             .bookingDate(booking.getBookingDate())
             .startTime(booking.getStartTime())
             .endTime(booking.getEndTime())
             .purpose(booking.getPurpose())
             .expectedAttendees(booking.getExpectedAttendees())
             .status(booking.getStatus())
+            .rejectionReason(booking.getAdminReason())
             .adminReason(booking.getAdminReason())
             .createdAt(booking.getCreatedAt())
             .updatedAt(booking.getUpdatedAt())

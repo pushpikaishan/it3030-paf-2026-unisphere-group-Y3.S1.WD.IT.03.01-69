@@ -1,5 +1,6 @@
 package com.unisphere.dto.booking;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
@@ -18,8 +19,9 @@ public class BookingRequestDTO {
     @NotNull(message = "Resource is required")
     private Long resourceId;
 
-    @NotNull(message = "Booking date is required")
+    @NotNull(message = "Date is required")
     @FutureOrPresent(message = "Booking date cannot be in the past")
+    @JsonAlias({"date", "bookingDate"})
     private LocalDate bookingDate;
 
     @NotNull(message = "Start time is required")

@@ -1,0 +1,136 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< backend:backend >---------------------------
+[INFO] Building  0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.13:run (default-cli) > test-compile @ backend >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ backend ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] Copying 4 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ backend ---
+[INFO] skip non existing resourceDirectory D:\chaya\PAF\it3030-paf-2026-unisphere-group-Y3.S1.WD.IT.03.01-64\backend\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:3.5.13:run (default-cli) < test-compile @ backend <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.13:run (default-cli) @ backend ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.13)
+
+2026-04-26T22:42:47.908+05:30  INFO 12984 --- [backend] [           main] com.unisphere.BackendApplication         : Starting BackendApplication using Java 24.0.1 with PID 12984 (D:\chaya\PAF\it3030-paf-2026-unisphere-group-Y3.S1.WD.IT.03.01-64\backend\target\classes started by Methya Chayangi in D:\chaya\PAF\it3030-paf-2026-unisphere-group-Y3.S1.WD.IT.03.01-64\backend)
+2026-04-26T22:42:47.911+05:30  INFO 12984 --- [backend] [           main] com.unisphere.BackendApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-04-26T22:42:48.870+05:30  INFO 12984 --- [backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-26T22:42:48.967+05:30  INFO 12984 --- [backend] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 85 ms. Found 4 JPA repository interfaces.
+2026-04-26T22:42:49.692+05:30  INFO 12984 --- [backend] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8085 (http)
+2026-04-26T22:42:49.710+05:30  INFO 12984 --- [backend] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-26T22:42:49.711+05:30  INFO 12984 --- [backend] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.53]
+2026-04-26T22:42:49.780+05:30  INFO 12984 --- [backend] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-04-26T22:42:49.781+05:30  INFO 12984 --- [backend] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1814 ms
+2026-04-26T22:42:50.147+05:30  INFO 12984 --- [backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-26T22:42:50.460+05:30  INFO 12984 --- [backend] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@307c59ea
+2026-04-26T22:42:50.462+05:30  INFO 12984 --- [backend] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-26T22:42:50.557+05:30  INFO 12984 --- [backend] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:mysql://localhost:3306/unisphere_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC (MySQL 8.0)
+2026-04-26T22:42:50.734+05:30  INFO 12984 --- [backend] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 6 migrations (execution time 00:00.112s)
+2026-04-26T22:42:50.757+05:30  INFO 12984 --- [backend] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema `unisphere_db`: 5
+2026-04-26T22:42:50.763+05:30  INFO 12984 --- [backend] [           main] o.f.core.internal.command.DbMigrate      : Schema `unisphere_db` is up to date. No migration necessary.
+2026-04-26T22:42:50.894+05:30  INFO 12984 --- [backend] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-04-26T22:42:50.987+05:30  INFO 12984 --- [backend] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.45.Final
+2026-04-26T22:42:51.036+05:30  INFO 12984 --- [backend] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-04-26T22:42:51.458+05:30  INFO 12984 --- [backend] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-26T22:42:51.545+05:30  WARN 12984 --- [backend] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-26T22:42:51.547+05:30  WARN 12984 --- [backend] [           main] org.hibernate.orm.deprecation            : HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2026-04-26T22:42:51.565+05:30  INFO 12984 --- [backend] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-04-26T22:42:52.868+05:30  INFO 12984 --- [backend] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-26T22:42:52.872+05:30  INFO 12984 --- [backend] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-26T22:42:53.469+05:30  INFO 12984 --- [backend] [           main] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name daoAuthenticationProvider
+2026-04-26T22:42:53.471+05:30  WARN 12984 --- [backend] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-04-26T22:42:53.730+05:30  WARN 12984 --- [backend] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-04-26T22:42:54.586+05:30  INFO 12984 --- [backend] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8085 (http) with context path '/'
+2026-04-26T22:42:54.598+05:30  INFO 12984 --- [backend] [           main] com.unisphere.BackendApplication         : Started BackendApplication in 7.329 seconds (process running for 7.774)
+2026-04-26T22:43:11.882+05:30  INFO 12984 --- [backend] [nio-8085-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-04-26T22:43:11.884+05:30  INFO 12984 --- [backend] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-04-26T22:43:11.887+05:30  INFO 12984 --- [backend] [nio-8085-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.app_two_factor_enabled,
+        u1_0.app_two_factor_pending_expires_at,
+        u1_0.app_two_factor_pending_secret,
+        u1_0.app_two_factor_secret,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.email_otp_code,
+        u1_0.email_otp_expires_at,
+        u1_0.email_two_factor_enabled,
+        u1_0.google_id,
+        u1_0.name,
+        u1_0.password,
+        u1_0.profile_image,
+        u1_0.provider,
+        u1_0.role,
+        u1_0.status 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.app_two_factor_enabled,
+        u1_0.app_two_factor_pending_expires_at,
+        u1_0.app_two_factor_pending_secret,
+        u1_0.app_two_factor_secret,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.email_otp_code,
+        u1_0.email_otp_expires_at,
+        u1_0.email_two_factor_enabled,
+        u1_0.google_id,
+        u1_0.name,
+        u1_0.password,
+        u1_0.profile_image,
+        u1_0.provider,
+        u1_0.role,
+        u1_0.status 
+    from
+        users u1_0 
+    where
+        u1_0.email=?
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  06:28 min
+[INFO] Finished at: 2026-04-26T22:49:11+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.13:run (default-cli) on project backend: Process terminated with exit code: -1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

@@ -14,6 +14,59 @@
   gap: 14px;
 }
 
+.bookings-history-wrap {
+  display: grid;
+  gap: 16px;
+}
+
+.ticket-history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.ticket-history-item {
+  border: 1px solid #e0e7ff;
+  border-radius: 12px;
+  padding: 12px;
+  background: #ffffff;
+  display: grid;
+  gap: 8px;
+}
+
+.ticket-history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ticket-history-head h4 {
+  margin: 0;
+  color: #0a2c5a;
+}
+
+.ticket-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ticket-status.responded {
+  color: #16552d;
+  background: #daf7e2;
+  border: 1px solid #a6e5bb;
+}
+
+.ticket-status.pending {
+  color: #8a5802;
+  background: #fff2d6;
+  border: 1px solid #ffd68a;
+}
+
 .booking-form {
   display: grid;
   gap: 10px;

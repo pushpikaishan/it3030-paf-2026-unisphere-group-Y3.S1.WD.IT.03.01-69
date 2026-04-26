@@ -1,9 +1,9 @@
 export default function BookingFilters({ filters, onChange, onReset, resources = [] }) {
   return (
-    <div className="booking-filters card">
+    <aside className="booking-filters card">
       <h3>Filters</h3>
 
-      <label>
+      <label className="filter-group">
         <span>Status</span>
         <select value={filters.status} onChange={(e) => onChange('status', e.target.value)}>
           <option value="">All</option>
@@ -14,7 +14,7 @@ export default function BookingFilters({ filters, onChange, onReset, resources =
         </select>
       </label>
 
-      <label>
+      <label className="filter-group">
         <span>Resource</span>
         <select value={filters.resourceId} onChange={(e) => onChange('resourceId', e.target.value)}>
           <option value="">All</option>
@@ -26,7 +26,7 @@ export default function BookingFilters({ filters, onChange, onReset, resources =
         </select>
       </label>
 
-      <label>
+      <label className="filter-group">
         <span>Date</span>
         <input type="date" value={filters.date} onChange={(e) => onChange('date', e.target.value)} />
       </label>
@@ -34,6 +34,6 @@ export default function BookingFilters({ filters, onChange, onReset, resources =
       <button type="button" className="btn" onClick={onReset}>
         Reset Filters
       </button>
-    </div>
+    </aside>
   )
 }
