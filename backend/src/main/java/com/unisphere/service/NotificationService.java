@@ -5,6 +5,7 @@ import com.unisphere.entity.User;
 import com.unisphere.repository.NotificationRepository;
 import com.unisphere.repository.UserRepository;
 import java.util.List;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,22 +25,22 @@ public class NotificationService {
         return notificationRepository.findAll();
     }
 
-    public List<Notification> findByUserId(Long userId) {
+    public List<Notification> findByUserId(@NonNull Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         return notificationRepository.findByUser(user);
     }
 
-    public Notification findById(Long id) {
+    public Notification findById(@NonNull Long id) {
         return notificationRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Notification not found"));
     }
 
-    public Notification create(Notification notification, Long userId) {
+    public Notification create(@NonNull Notification notification, @NonNull Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         notification.setUser(user);
         return notificationRepository.save(notification);
     }
 
-    public Notification update(Long id, Notification update, Long userId) {
+    public Notification update(@NonNull Long id, @NonNull Notification update, Long userId) {
         Notification existing = findById(id);
         if (userId != null) {
             User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -52,7 +53,7 @@ public class NotificationService {
         return notificationRepository.save(existing);
     }
 
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
         notificationRepository.deleteById(id);
     }
 }

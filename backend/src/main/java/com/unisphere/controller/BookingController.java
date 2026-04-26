@@ -6,11 +6,11 @@ import com.unisphere.dto.booking.BookingResponseDTO;
 import com.unisphere.entity.BookingStatus;
 import com.unisphere.service.BookingService;
 import jakarta.validation.Valid;
-import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -35,7 +35,7 @@ public class BookingController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<BookingResponseDTO> requestBooking(@Valid @RequestBody BookingRequestDTO request, Authentication authentication) {
         BookingResponseDTO created = bookingService.requestBooking(request, authentication.getName());
-        return ResponseEntity.created(URI.create("/api/bookings/" + created.getId())).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping("/my")

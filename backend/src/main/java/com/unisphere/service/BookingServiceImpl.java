@@ -18,11 +18,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +62,8 @@ public class BookingServiceImpl implements BookingService {
             .status(BookingStatus.PENDING)
             .build();
 
-        return toResponse(bookingRepository.save(booking));
+        Booking saved = bookingRepository.save(Objects.requireNonNull(booking));
+        return toResponse(saved);
     }
 
     @Override
@@ -79,7 +82,7 @@ public class BookingServiceImpl implements BookingService {
         int safeSize = Math.min(Math.max(size, 1), 100);
         Pageable pageable = PageRequest.of(safePage, safeSize);
 
-        Specification<Booking> specification = Specification.where(null);
+        Specification<Booking> specification = (root, query, cb) -> cb.conjunction();
 
         if (status != null) {
             specification = specification.and((root, query, cb) -> cb.equal(root.get("status"), status));
@@ -187,14 +190,14 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public void deleteBooking(Long id) {
         Booking booking = findBooking(id);
-        bookingRepository.delete(booking);
+        bookingRepository.delete(Objects.requireNonNull(booking));
     }
 
-    private Booking findBooking(Long id) {
+    private Booking findBooking(@NonNull Long id) {
         return bookingRepository.findById(id).orElseThrow(() -> new BookingNotFoundException(id));
     }
 
-    private Resource findResource(Long resourceId) {
+    private Resource findResource(@NonNull Long resourceId) {
         return resourceRepository.findById(resourceId).orElseThrow(() -> new ResourceNotFoundException(resourceId));
     }
 

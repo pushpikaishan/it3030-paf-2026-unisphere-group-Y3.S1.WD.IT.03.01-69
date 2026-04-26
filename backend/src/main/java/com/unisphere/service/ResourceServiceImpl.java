@@ -11,8 +11,10 @@ import com.unisphere.exception.DuplicateResourceException;
 import com.unisphere.exception.ResourceHasActiveBookingsException;
 import com.unisphere.exception.ResourceNotFoundException;
 import com.unisphere.repository.ResourceRepository;
+import java.util.Objects;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,7 +47,7 @@ public class ResourceServiceImpl implements ResourceService {
         int safeSize = Math.min(Math.max(size, 1), 100);
         Pageable pageable = PageRequest.of(safePage, safeSize);
 
-        Specification<Resource> specification = Specification.where(null);
+        Specification<Resource> specification = (root, query, cb) -> cb.conjunction();
 
         if (type != null) {
             specification = specification.and((root, query, cb) -> cb.equal(root.get("type"), type));
@@ -97,7 +99,8 @@ public class ResourceServiceImpl implements ResourceService {
             .imageUrl(request.getImageUrl())
             .build();
 
-        return toResponse(resourceRepository.save(resource));
+        Resource saved = resourceRepository.save(Objects.requireNonNull(resource));
+        return toResponse(saved);
     }
 
     @Override
@@ -141,7 +144,7 @@ public class ResourceServiceImpl implements ResourceService {
         return toResponse(resourceRepository.save(existing));
     }
 
-    private Resource findResource(Long id) {
+    private Resource findResource(@NonNull Long id) {
         return resourceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
     }
 

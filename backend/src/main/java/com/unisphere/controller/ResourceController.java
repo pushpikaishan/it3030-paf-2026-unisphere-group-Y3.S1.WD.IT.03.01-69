@@ -8,11 +8,11 @@ import com.unisphere.entity.ResourceStatus;
 import com.unisphere.entity.ResourceType;
 import com.unisphere.service.ResourceService;
 import jakarta.validation.Valid;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -63,7 +63,7 @@ public class ResourceController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResourceResponseDTO> create(@Valid @RequestBody ResourceCreateDTO request) {
         ResourceResponseDTO created = resourceService.createResource(request);
-        return ResponseEntity.created(URI.create("/api/resources/" + created.getId())).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")

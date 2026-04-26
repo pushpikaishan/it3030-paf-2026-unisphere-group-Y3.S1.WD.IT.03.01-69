@@ -6,6 +6,7 @@ import com.unisphere.service.TwoFactorService;
 import com.unisphere.entity.UserStatus;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -180,7 +181,8 @@ public class UserController {
             }
         }
 
-        User updated = userService.disable(existing.getId());
+        Long existingUserId = Objects.requireNonNull(existing.getId(), "User id is required");
+        User updated = userService.disable(existingUserId);
         return ResponseEntity.ok(Map.of(
             "message", "Account temporarily disabled. It will be deleted permanently in 1 month.",
             "user", updated
