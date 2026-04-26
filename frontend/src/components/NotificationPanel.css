@@ -1,0 +1,64 @@
+/* Ensure button does not cover unread background */
+.notify-item-btn {
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.notify-list-item.unread {
+  background: #c2daf4 !important; /* low blue background for unread */
+}
+
+.notify-list-item {
+  background: #fff; /* white for read */
+  border-radius: 7px;
+  margin-bottom: 6px;
+  /* overflow: hidden; */
+}
+
+
+/* Remove double tick styling */
+
+
+.notify-list-item .notify-time-ago {
+  font-size: 0.75em;
+  color: #e97b25;
+  position: absolute;
+  left: 190px;
+  bottom: 8px;
+  background: #fff7e6;
+  border-radius: 8px;
+  padding: 1px 6px;
+  font-weight: 600;
+  z-index: 2;
+}
+
+.notify-list-item .notify-item-title {
+  color: #0a2c5a;
+  font-weight: 700;
+  background: transparent;
+  z-index: 3;
+}
+
+.notify-list-item.unread .notify-item-title {
+  color: #0a2c5a;
+}
+
+.notify-list-item {
+  position: relative;
+}
+
+.notify-read-all-btn {
+  background: #fff7e6;
+  color: #e97b25;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-weight: 600;
+  margin-left: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.notify-read-all-btn:hover {
+  background: #ffe5b4;
+}

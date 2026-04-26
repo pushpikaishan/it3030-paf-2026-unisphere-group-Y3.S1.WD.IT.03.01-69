@@ -1,12 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import NotificationPanel from './NotificationPanel'
 import logo from '../assets/images/unisphere.png'
 import bell from '../assets/images/normelbell.png'
+import activebell from '../assets/images/activebell.png'
+import { announcementApi } from '../services/announcementApi'
 
 export default function Navbar() {
   const [showNotifications, setShowNotifications] = useState(false)
+  const [roleAnnouncements, setRoleAnnouncements] = useState([])
   const { pathname } = useLocation()
   const { user } = useAuth()
   const isPrivileged = user?.role === 'ADMIN' || user?.role === 'MANAGER'
@@ -34,7 +37,54 @@ export default function Navbar() {
 
   const links = isPrivileged && onAdminPage ? adminNav : defaultNav
   const brandHref = isPrivileged && onAdminPage ? '/admin/dashboard' : '/'
-  const notifications = user?.notifications || []
+  useEffect(() => {
+    let active = true
+
+    const loadAnnouncements = async () => {
+      if (!user) {
+        if (active) setRoleAnnouncements([])
+        return
+      }
+
+      try {
+        const list = await announcementApi.getMyAnnouncements()
+        if (!active) return
+        const mapped = (Array.isArray(list) ? list : []).map((item) => ({
+          id: `ann-${item.id}`,
+          title: item.title || 'Announcement',
+          message: item.message || '',
+          attachmentUrl: item.attachmentUrl || '',
+          createdAt: item.createdAt,
+          type: 'announcement',
+        }))
+        setRoleAnnouncements(mapped)
+      } catch {
+        if (active) setRoleAnnouncements([])
+      }
+    }
+
+    loadAnnouncements()
+    return () => {
+      active = false
+    }
+  }, [user])
+
+  const notifications = [...roleAnnouncements, ...(user?.notifications || [])]
+
+  // Unread notification count
+  const [readMap, setReadMap] = useState(() => {
+    const userKey = user?.id || user?.email || 'guest'
+    const stored = localStorage.getItem(`unisphere_notification_read_${userKey}`)
+    return stored ? JSON.parse(stored) : {}
+  })
+
+  useEffect(() => {
+    const userKey = user?.id || user?.email || 'guest'
+    const stored = localStorage.getItem(`unisphere_notification_read_${userKey}`)
+    setReadMap(stored ? JSON.parse(stored) : {})
+  }, [user])
+
+  const unreadCount = notifications.filter(n => !readMap[n.id]).length
 
   return (
     <header className="navbar">
@@ -56,7 +106,7 @@ export default function Navbar() {
           onClick={() => setShowNotifications((prev) => !prev)}
           aria-label="Toggle notifications"
         >
-          <img className="nav-bell" src={bell} alt="Notifications" />
+          <img className="nav-bell" src={unreadCount > 0 ? activebell : bell} alt="Notifications" />
         </button>
         {user && (
           <Link className="nav-profile" to="/profile">
@@ -67,7 +117,7 @@ export default function Navbar() {
       </div>
       {showNotifications && (
         <div className="nav-notify-panel">
-          <NotificationPanel items={notifications} />
+          <NotificationPanel items={notifications} user={user} />
         </div>
       )}
     </header>

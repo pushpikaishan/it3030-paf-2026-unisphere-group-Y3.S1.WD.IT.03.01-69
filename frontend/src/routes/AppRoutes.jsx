@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import NotFound from '../components/NotFound'
 import Loader from '../components/Loader'
 import Dashboard from '../pages/Dashboard'
 import BookingPage from '../pages/BookingPage'
@@ -61,7 +62,8 @@ export default function AppRoutes() {
       <Route path="/contact-admin" element={<ContactAdmin />} />
       <Route path="/pending/technician" element={<PendingApproval />} />
       <Route path="/oauth/callback" element={<OAuthCallback />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
+
     </Routes>
   )
 }

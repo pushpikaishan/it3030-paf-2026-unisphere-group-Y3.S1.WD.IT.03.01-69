@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import TwoFactorChallengeModal from '../components/TwoFactorChallengeModal'
 import { useAuth } from '../hooks/useAuth'
 import { userService } from '../services/userService'
+import { addNotification, getNotificationUserKey } from '../utils/notificationSettings'
 import './css/profile.css'
 
 export default function Profile() {
@@ -166,6 +167,8 @@ export default function Profile() {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || user?.email || 'User')}`
   }, [apiOrigin, profileImage, user?.email, user?.name])
 
+  const notificationUserKey = useMemo(() => getNotificationUserKey(user), [user])
+
   if (!user) return null
 
   const handleSave = async () => {
@@ -186,6 +189,12 @@ export default function Profile() {
 
       await userService.update(user.id, payload)
       await refresh()
+      addNotification(notificationUserKey, {
+        category: 'account',
+        type: 'account-profile',
+        title: 'Profile details updated',
+        message: 'Your name or email details were updated successfully.',
+      })
       setStatus('Profile updated successfully')
       setEditing(false)
     } catch (err) {
@@ -215,6 +224,12 @@ export default function Profile() {
       if (url) {
         setProfileImage(url)
         await refresh()
+        addNotification(notificationUserKey, {
+          category: 'account',
+          type: 'account-profile',
+          title: 'Profile photo updated',
+          message: 'Your profile photo was updated successfully.',
+        })
         setStatus('Image updated successfully')
         setEditing(false)
       } else {
@@ -327,6 +342,12 @@ export default function Profile() {
     try {
       const payload = { ...user, name, email, profileImage, password: newPassword, twoFactorToken: verificationToken }
       await userService.update(user.id, payload)
+      addNotification(notificationUserKey, {
+        category: 'security',
+        type: 'security-password',
+        title: 'Password changed',
+        message: 'Your account password has been changed.',
+      })
       setPasswordStatus('Password changed successfully.')
       setShowPasswordModal(false)
       setNewPassword('')
@@ -373,6 +394,12 @@ export default function Profile() {
     try {
       await userService.verifyEmailOtp(otpCode.trim())
       setTwoFactorMethods((prev) => ({ ...prev, email: true }))
+      addNotification(notificationUserKey, {
+        category: 'security',
+        type: 'security-twofactor',
+        title: 'Two-factor enabled (email)',
+        message: 'Email two-factor verification has been enabled on your account.',
+      })
       setTwoFactorStatus('Email two-factor authentication is enabled.')
       setOtpStatus('OTP verified successfully.')
       setShowEmailOtpModal(false)
@@ -420,6 +447,12 @@ export default function Profile() {
     try {
       await userService.verifyAuthenticatorApp(appCode.trim())
       setTwoFactorMethods((prev) => ({ ...prev, app: true }))
+      addNotification(notificationUserKey, {
+        category: 'security',
+        type: 'security-twofactor',
+        title: 'Two-factor enabled (authenticator app)',
+        message: 'Authenticator app two-factor verification has been enabled.',
+      })
       setTwoFactorStatus('Authenticator app two-factor is enabled.')
       setShowAppOtpModal(false)
       setAppCode('')
@@ -439,6 +472,12 @@ export default function Profile() {
     try {
       await userService.disableEmailTwoFactor()
       setTwoFactorMethods((prev) => ({ ...prev, email: false }))
+      addNotification(notificationUserKey, {
+        category: 'security',
+        type: 'security-twofactor',
+        title: 'Two-factor disabled (email)',
+        message: 'Email two-factor verification has been disabled.',
+      })
       setTwoFactorStatus('Email two-factor authentication is disabled.')
     } catch (err) {
       setTwoFactorStatus(err?.message || 'Could not disable email two-factor.')
@@ -452,6 +491,12 @@ export default function Profile() {
     try {
       await userService.disableAuthenticatorApp()
       setTwoFactorMethods((prev) => ({ ...prev, app: false }))
+      addNotification(notificationUserKey, {
+        category: 'security',
+        type: 'security-twofactor',
+        title: 'Two-factor disabled (authenticator app)',
+        message: 'Authenticator app two-factor verification has been disabled.',
+      })
       setTwoFactorStatus('Authenticator app two-factor is disabled.')
     } catch (err) {
       setTwoFactorStatus(err?.message || 'Could not disable authenticator app.')
