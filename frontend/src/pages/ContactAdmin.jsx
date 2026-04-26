@@ -8,21 +8,49 @@ export default function ContactAdmin() {
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const { pathname } = useLocation()
 
   const backHref = pathname.includes('login') ? '/login' : pathname.includes('register') ? '/register' : '/login'
   const backLabel = backHref === '/register' ? 'Back to register' : 'Back to login'
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
     setStatus('')
-    if (!email || !message) {
+    setError('')
+
+    if (!email.trim() || !message.trim()) {
       setStatus('Please add your email and message.')
       return
     }
-    setStatus('Thanks! Your message was noted — an admin will reach out soon.')
-    setEmail('')
-    setMessage('')
+
+    try {
+      setSubmitting(true)
+      const res = await fetch('/api/support-requests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          message: message.trim(),
+        }),
+      })
+
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(payload?.message || 'Could not send your message.')
+      }
+
+      setStatus(payload?.message || 'Thanks! Your message was sent to admin.')
+      setEmail('')
+      setMessage('')
+    } catch (err) {
+      setError(err.message || 'Could not send your message.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -54,10 +82,11 @@ export default function ContactAdmin() {
             onChange={(e) => setMessage(e.target.value)}
             rows={4}
           />
-          <button className="button" type="submit">
-            Send message
+          <button className="button" type="submit" disabled={submitting}>
+            {submitting ? 'Sending...' : 'Send message'}
           </button>
           {status && <p className="muted">{status}</p>}
+          {error && <p className="error">{error}</p>}
         </form>
         <div className="auth-footer">
           <Link className="link-button" to={backHref}>
