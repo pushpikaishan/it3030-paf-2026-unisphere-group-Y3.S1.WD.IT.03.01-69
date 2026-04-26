@@ -6,6 +6,9 @@ import com.unisphere.dto.resource.ResourceStatusUpdateDTO;
 import com.unisphere.dto.resource.ResourceUpdateDTO;
 import com.unisphere.entity.ResourceStatus;
 import com.unisphere.entity.ResourceType;
+import com.unisphere.entity.User;
+import com.unisphere.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import com.unisphere.service.ResourceService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -14,6 +17,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ResourceController {
 
     private final ResourceService resourceService;
+    private final UserRepository userRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
@@ -59,6 +64,13 @@ public class ResourceController {
         return ResponseEntity.ok(Arrays.asList(ResourceType.values()));
     }
 
+    @GetMapping("/my-selections")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ResourceResponseDTO>> getMySelections(Authentication authentication) {
+        Long userId = extractCurrentUserId(authentication);
+        return ResponseEntity.ok(resourceService.getSelectedResourcesForUser(userId));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResourceResponseDTO> create(@Valid @RequestBody ResourceCreateDTO request) {
@@ -83,5 +95,26 @@ public class ResourceController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResourceResponseDTO> updateStatus(@PathVariable Long id, @Valid @RequestBody ResourceStatusUpdateDTO request) {
         return ResponseEntity.ok(resourceService.updateStatus(id, request));
+    }
+
+    private Long extractCurrentUserId(Authentication authentication) {
+        if (authentication == null) {
+            return null;
+        }
+
+        Object details = authentication.getDetails();
+        if (details instanceof Claims claims) {
+            Number id = claims.get("id", Number.class);
+            if (id != null) {
+                return id.longValue();
+            }
+        }
+
+        String email = authentication.getName();
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+
+        return userRepository.findByEmail(email).map(User::getId).orElse(null);
     }
 }
