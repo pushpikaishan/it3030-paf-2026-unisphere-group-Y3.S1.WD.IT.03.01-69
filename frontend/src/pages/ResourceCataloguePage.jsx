@@ -33,8 +33,8 @@ const normalizeErrorMessage = (error, fallback) => {
 
 export default function ResourceCataloguePage({ managementEnabled = false }) {
   const { user } = useAuth()
-  const isAdmin = user?.role === 'ADMIN'
-  const canManageResources = managementEnabled && isAdmin
+  const isPrivileged = user?.role === 'ADMIN' || user?.role === 'MANAGER'
+  const canManageResources = managementEnabled && isPrivileged
 
   const [filters, setFilters] = useState(initialFilters)
   const [debouncedSearch, setDebouncedSearch] = useState('')

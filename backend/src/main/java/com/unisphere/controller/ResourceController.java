@@ -34,7 +34,6 @@ public class ResourceController {
     private final ResourceService resourceService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<Page<ResourceResponseDTO>> getResources(
         @RequestParam(required = false) ResourceType type,
         @RequestParam(required = false) Integer minCapacity,
@@ -48,39 +47,37 @@ public class ResourceController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<ResourceResponseDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(resourceService.getResourceById(id));
     }
 
     @GetMapping("/types")
-    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     public ResponseEntity<List<ResourceType>> getTypes() {
         return ResponseEntity.ok(Arrays.asList(ResourceType.values()));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<ResourceResponseDTO> create(@Valid @RequestBody ResourceCreateDTO request) {
         ResourceResponseDTO created = resourceService.createResource(request);
         return ResponseEntity.created(URI.create("/api/resources/" + created.getId())).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<ResourceResponseDTO> update(@PathVariable Long id, @Valid @RequestBody ResourceUpdateDTO request) {
         return ResponseEntity.ok(resourceService.updateResource(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         resourceService.deleteResource(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<ResourceResponseDTO> updateStatus(@PathVariable Long id, @Valid @RequestBody ResourceStatusUpdateDTO request) {
         return ResponseEntity.ok(resourceService.updateStatus(id, request));
     }

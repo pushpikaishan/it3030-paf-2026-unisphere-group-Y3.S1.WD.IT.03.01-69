@@ -10,16 +10,29 @@ const decodeToken = () => {
     const [, payload] = token.split('.')
     const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
     const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')
-    return JSON.parse(atob(padded))
+    const claims = JSON.parse(atob(padded))
+    const expMs = claims?.exp ? claims.exp * 1000 : null
+    if (expMs && expMs <= Date.now()) {
+      localStorage.removeItem('token')
+      return null
+    }
+    return claims
   } catch (e) {
+    localStorage.removeItem('token')
     return null
   }
 }
 
+const normalizeRole = (value) => {
+  if (!value || typeof value !== 'string') return undefined
+  return value.startsWith('ROLE_') ? value.replace('ROLE_', '') : value
+}
+
 const extractRole = (role, authorities) => {
-  if (role) return role
+  const normalizedRole = normalizeRole(role)
+  if (normalizedRole) return normalizedRole
   const primary = authorities?.find((auth) => auth?.startsWith('ROLE_'))
-  return primary ? primary.replace('ROLE_', '') : undefined
+  return normalizeRole(primary)
 }
 
 export function AuthProvider({ children }) {
@@ -42,7 +55,7 @@ export function AuthProvider({ children }) {
         // Fallback to token claims so the session survives brief /me issues
         if (tokenClaims) {
           setUser({
-            role: tokenClaims.role,
+            role: normalizeRole(tokenClaims.role),
             id: tokenClaims.id,
             name: tokenClaims.name,
             email: tokenClaims.email || tokenClaims.sub,
@@ -57,7 +70,7 @@ export function AuthProvider({ children }) {
       // keep a minimal user so the UI (e.g., navbar avatar) doesn't disappear.
       if (tokenClaims) {
         setUser({
-          role: tokenClaims.role,
+          role: normalizeRole(tokenClaims.role),
           id: tokenClaims.id,
           name: tokenClaims.name,
           email: tokenClaims.email || tokenClaims.sub,
