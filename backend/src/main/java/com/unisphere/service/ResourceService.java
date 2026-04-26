@@ -6,7 +6,6 @@ import com.unisphere.dto.resource.ResourceStatusUpdateDTO;
 import com.unisphere.dto.resource.ResourceUpdateDTO;
 import com.unisphere.entity.ResourceStatus;
 import com.unisphere.entity.ResourceType;
-import java.util.List;
 import org.springframework.data.domain.Page;
 
 public interface ResourceService {
@@ -30,6 +29,4 @@ public interface ResourceService {
     void deleteResource(Long id);
 
     ResourceResponseDTO updateStatus(Long id, ResourceStatusUpdateDTO request);
-
-
 }
