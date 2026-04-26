@@ -13,6 +13,8 @@ import {
   useUpdateResourceStatus,
 } from '../hooks/useResources'
 import { useAuth } from '../hooks/useAuth'
+import { useBookings } from '../hooks/useBookings'
+import { useNavigate } from 'react-router-dom'
 import './css/resources.css'
 
 const initialFilters = {
@@ -33,6 +35,8 @@ const normalizeErrorMessage = (error, fallback) => {
 
 export default function ResourceCataloguePage({ managementEnabled = false }) {
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const { addBooking, isBookedByUser } = useBookings()
   const isPrivileged = user?.role === 'ADMIN' || user?.role === 'MANAGER'
   const canManageResources = managementEnabled && isPrivileged
 
@@ -131,6 +135,22 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
     }
   }
 
+  const handleBookNow = (resource) => {
+    if (!user) {
+      notify('error', 'Please log in to book resources.')
+      navigate('/login')
+      return
+    }
+
+    const result = addBooking(resource, user)
+    if (result.ok) {
+      notify('success', `${resource.name} booked successfully.`)
+      return
+    }
+
+    notify('error', result.message || 'Could not complete booking.')
+  }
+
   return (
     <section className="resource-layout">
       <ResourceFilters
@@ -210,6 +230,9 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
                   key={resource.id}
                   resource={resource}
                   isAdmin={canManageResources}
+                  onBookNow={handleBookNow}
+                  canBook={resource.status === 'ACTIVE'}
+                  isBooked={isBookedByUser(resource.id, user)}
                   onEdit={(item) => {
                     setEditingResource(item)
                     setFormOpen(true)
