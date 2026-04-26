@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS bookings (
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  resource_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  booking_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  purpose VARCHAR(500) NOT NULL,
+  expected_attendees INT NOT NULL,
+  status ENUM('PENDING','APPROVED','REJECTED','CANCELLED') NOT NULL DEFAULT 'PENDING',
+  admin_reason VARCHAR(500) DEFAULT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_bookings_resource_date (resource_id, booking_date),
+  KEY idx_bookings_user_id (user_id),
+  KEY idx_bookings_status (status),
+  CONSTRAINT fk_bookings_resource FOREIGN KEY (resource_id) REFERENCES resources (id),
+  CONSTRAINT fk_bookings_user FOREIGN KEY (user_id) REFERENCES users (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
