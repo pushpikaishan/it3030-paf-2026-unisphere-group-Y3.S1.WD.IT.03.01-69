@@ -66,11 +66,7 @@ public class BookingServiceImpl implements BookingService {
             .build();
 
         Booking saved = bookingRepository.save(Objects.requireNonNull(booking));
-        notifyUser(
-            saved.getUser().getId(),
-            "Booking Request Submitted",
-            buildPendingMessage(saved)
-        );
+        notifyUserIfPossible(saved, "Booking Request Submitted", buildPendingMessage(saved));
         return toResponse(saved);
     }
 
@@ -138,11 +134,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setAdminReason(null);
 
         Booking updated = bookingRepository.save(booking);
-        notifyUser(
-            updated.getUser().getId(),
-            "Booking Approved",
-            buildStatusMessage(updated, "approved")
-        );
+        notifyUserIfPossible(updated, "Booking Approved", buildStatusMessage(updated, "approved"));
 
         return toResponse(updated);
     }
@@ -163,8 +155,8 @@ public class BookingServiceImpl implements BookingService {
         booking.setAdminReason(reason.trim());
 
         Booking updated = bookingRepository.save(booking);
-        notifyUser(
-            updated.getUser().getId(),
+        notifyUserIfPossible(
+            updated,
             "Booking Rejected",
             buildStatusMessage(updated, "rejected") + " Reason: " + updated.getAdminReason()
         );
@@ -190,11 +182,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Booking updated = bookingRepository.save(booking);
-        notifyUser(
-            updated.getUser().getId(),
-            "Booking Cancelled",
-            buildStatusMessage(updated, "cancelled")
-        );
+        notifyUserIfPossible(updated, "Booking Cancelled", buildStatusMessage(updated, "cancelled"));
 
         return toResponse(updated);
     }
@@ -273,7 +261,8 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private boolean isOwner(Booking booking, String requesterEmail) {
-        return booking.getUser().getEmail() != null
+        return booking.getUser() != null
+            && booking.getUser().getEmail() != null
             && booking.getUser().getEmail().toLowerCase(Locale.ROOT).equals(requesterEmail.toLowerCase(Locale.ROOT));
     }
 
@@ -307,11 +296,21 @@ public class BookingServiceImpl implements BookingService {
         return "Unknown Resource";
     }
 
+    private void notifyUserIfPossible(Booking booking, String title, String message) {
+        if (booking.getUser() == null || booking.getUser().getId() == null) {
+            return;
+        }
+        notifyUser(booking.getUser().getId(), title, message);
+    }
+
     private BookingResponseDTO toResponse(Booking booking) {
         Resource resource = booking.getResource();
         User user = booking.getUser();
         Long resourceId = resource != null ? resource.getId() : null;
         String resourceName = resource != null ? resource.getName() : booking.getResourceName();
+        if (resourceName == null || resourceName.isBlank()) {
+            resourceName = "Unknown Resource";
+        }
         String resourceLocation = resource != null ? resource.getLocation() : null;
 
         return BookingResponseDTO.builder()

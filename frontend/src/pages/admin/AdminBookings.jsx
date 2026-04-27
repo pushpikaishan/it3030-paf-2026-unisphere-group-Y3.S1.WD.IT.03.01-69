@@ -6,7 +6,6 @@ import {
   useAdminBookings,
   useApproveBooking,
   useCancelBooking,
-  useDeleteBooking,
   useRejectBooking,
 } from '../../hooks/useBookings'
 import { useResources } from '../../hooks/useResources'
@@ -22,6 +21,9 @@ const getErrorMessage = (error, fallback) => {
   const message = error?.response?.data?.message || error?.message || fallback
   if (message.includes('already booked')) {
     return 'This resource is already booked for the selected time.'
+  }
+  if (message.includes('Booking not found')) {
+    return 'This booking no longer exists. The list has been refreshed.'
   }
   return message
 }
@@ -47,7 +49,6 @@ export default function AdminBookings() {
   const approveMutation = useApproveBooking()
   const rejectMutation = useRejectBooking()
   const cancelMutation = useCancelBooking()
-  const deleteMutation = useDeleteBooking()
 
   const bookings = data?.content || []
   const totalPages = data?.totalPages || 1
@@ -67,28 +68,50 @@ export default function AdminBookings() {
     setFeedback(null)
     try {
       await action()
+      await refetch()
       setFeedback({ kind: 'success', message: successMessage })
     } catch (err) {
+      if (err?.response?.status === 404) {
+        await refetch()
+      }
       setFeedback({ kind: 'error', message: getErrorMessage(err, fallbackError) })
     } finally {
       setBusyAction(null)
     }
   }
 
+  const resolveBookingId = (booking) => {
+    const parsed = Number(booking?.id)
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+  }
+
   const handleApprove = (booking) =>
-    withAction(
-      `approve-${booking.id}`,
-      () => approveMutation.mutateAsync(booking.id),
-      'Booking approved successfully.',
-      'Failed to approve booking.',
-    )
+    {
+      const bookingId = resolveBookingId(booking)
+      if (!bookingId) {
+        setFeedback({ kind: 'error', message: 'This booking has an invalid ID. Please refresh the list.' })
+        return Promise.resolve()
+      }
+      return withAction(
+        `approve-${bookingId}`,
+        () => approveMutation.mutateAsync(bookingId),
+        'Booking approved successfully.',
+        'Failed to approve booking.',
+      )
+    }
 
   const handleReject = async (reason) => {
     if (!rejectTarget) return
+    const bookingId = resolveBookingId(rejectTarget)
+    if (!bookingId) {
+      setFeedback({ kind: 'error', message: 'This booking has an invalid ID. Please refresh the list.' })
+      setRejectTarget(null)
+      return
+    }
 
     await withAction(
-      `reject-${rejectTarget.id}`,
-      () => rejectMutation.mutateAsync({ id: rejectTarget.id, reason }),
+      `reject-${bookingId}`,
+      () => rejectMutation.mutateAsync({ id: bookingId, reason }),
       'Booking rejected successfully.',
       'Failed to reject booking.',
     )
@@ -96,20 +119,19 @@ export default function AdminBookings() {
   }
 
   const handleCancel = (booking) =>
-    withAction(
-      `cancel-${booking.id}`,
-      () => cancelMutation.mutateAsync(booking.id),
-      'Booking cancelled successfully.',
-      'Failed to cancel booking.',
-    )
-
-  const handleDelete = (booking) =>
-    withAction(
-      `delete-${booking.id}`,
-      () => deleteMutation.mutateAsync(booking.id),
-      'Booking deleted successfully.',
-      'Failed to delete booking.',
-    )
+    {
+      const bookingId = resolveBookingId(booking)
+      if (!bookingId) {
+        setFeedback({ kind: 'error', message: 'This booking has an invalid ID. Please refresh the list.' })
+        return Promise.resolve()
+      }
+      return withAction(
+        `cancel-${bookingId}`,
+        () => cancelMutation.mutateAsync(bookingId),
+        'Booking cancelled successfully.',
+        'Failed to cancel booking.',
+      )
+    }
 
   return (
     <section className="booking-admin-layout">
@@ -162,7 +184,8 @@ export default function AdminBookings() {
                   onApprove={handleApprove}
                   onReject={setRejectTarget}
                   onCancel={handleCancel}
-                  onDelete={handleDelete}
+                  showCancel={true}
+                  showDelete={false}
                   busyAction={busyAction}
                 />
               ))}

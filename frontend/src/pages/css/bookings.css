@@ -1,11 +1,61 @@
 .bookings-layout {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .bookings-header {
   display: grid;
   gap: 6px;
+}
+
+.bookings-hero {
+  background: linear-gradient(135deg, #ffffff, #f3f8ff);
+}
+
+.bookings-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bookings-stat-card {
+  gap: 2px;
+  padding: 12px 14px;
+}
+
+.bookings-stat-card span {
+  color: #58708a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bookings-stat-card strong {
+  font-size: 24px;
+  line-height: 1.2;
+  color: #0a2c5a;
+}
+
+.bookings-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+}
+
+.bookings-filter-chip {
+  border: 1px solid #d1def2;
+  background: #f8fbff;
+  color: #23405f;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bookings-filter-chip.active {
+  border-color: #0a2c5a;
+  background: #0a2c5a;
+  color: #ffffff;
 }
 
 .bookings-grid {
@@ -53,7 +103,9 @@
 
 .booking-card {
   display: grid;
-  gap: 12px;
+  gap: 10px;
+  border-color: #d9e5f7;
+  box-shadow: 0 8px 22px rgba(10, 44, 90, 0.07);
 }
 
 .booking-card-head {
@@ -71,6 +123,7 @@
 .booking-card-grid p {
   margin: 0;
   color: #2e3f54;
+  line-height: 1.45;
 }
 
 .booking-admin-reason {
@@ -86,6 +139,29 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.booking-approve-btn,
+.booking-reject-btn,
+.booking-cancel-btn {
+  min-width: 104px;
+  box-shadow: none;
+}
+
+.booking-approve-btn {
+  background: #1f7a3f;
+  color: #ffffff;
+}
+
+.booking-reject-btn {
+  background: #8f1720;
+  color: #ffffff;
+}
+
+.booking-cancel-btn {
+  background: #eef2f7;
+  color: #24364b;
+  border: 1px solid #d5dce7;
 }
 
 .booking-status {
@@ -184,6 +260,10 @@
   .booking-filters {
     position: static;
   }
+
+  .bookings-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 680px) {
@@ -194,5 +274,9 @@
   .booking-pagination {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .bookings-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

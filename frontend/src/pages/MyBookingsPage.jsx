@@ -17,11 +17,23 @@ export default function MyBookingsPage() {
   const navigate = useNavigate()
   const [feedback, setFeedback] = useState(location.state?.bookingFeedback || null)
   const [busyAction, setBusyAction] = useState(null)
+  const [statusFilter, setStatusFilter] = useState('ALL')
 
   const { data, isLoading, isError, error, refetch } = useMyBookings()
   const cancelMutation = useCancelBooking()
 
   const bookings = data || []
+  const counts = {
+    ALL: bookings.length,
+    PENDING: bookings.filter((booking) => booking.status === 'PENDING').length,
+    APPROVED: bookings.filter((booking) => booking.status === 'APPROVED').length,
+    REJECTED: bookings.filter((booking) => booking.status === 'REJECTED').length,
+    CANCELLED: bookings.filter((booking) => booking.status === 'CANCELLED').length,
+  }
+  const filteredBookings =
+    statusFilter === 'ALL'
+      ? bookings
+      : bookings.filter((booking) => booking.status === statusFilter)
 
   useEffect(() => {
     if (!location.state?.bookingFeedback) return
@@ -43,9 +55,45 @@ export default function MyBookingsPage() {
 
   return (
     <section className="bookings-layout">
-      <div className="card bookings-header">
+      <div className="card bookings-header bookings-hero">
         <h2>My Bookings</h2>
-        <p className="muted">Track your booking requests and cancel pending or approved items.</p>
+        <p className="muted">Track booking status in one place and cancel pending or approved requests.</p>
+      </div>
+
+      <div className="bookings-stats-grid">
+        <div className="card bookings-stat-card">
+          <span>Total</span>
+          <strong>{counts.ALL}</strong>
+        </div>
+        <div className="card bookings-stat-card">
+          <span>Pending</span>
+          <strong>{counts.PENDING}</strong>
+        </div>
+        <div className="card bookings-stat-card">
+          <span>Approved</span>
+          <strong>{counts.APPROVED}</strong>
+        </div>
+        <div className="card bookings-stat-card">
+          <span>Rejected</span>
+          <strong>{counts.REJECTED}</strong>
+        </div>
+        <div className="card bookings-stat-card">
+          <span>Cancelled</span>
+          <strong>{counts.CANCELLED}</strong>
+        </div>
+      </div>
+
+      <div className="card bookings-filter-bar">
+        {Object.keys(counts).map((status) => (
+          <button
+            key={status}
+            type="button"
+            className={`bookings-filter-chip ${statusFilter === status ? 'active' : ''}`}
+            onClick={() => setStatusFilter(status)}
+          >
+            {status} ({counts[status]})
+          </button>
+        ))}
       </div>
 
       {feedback && <div className={`resource-toast ${feedback.kind}`}>{feedback.message}</div>}
@@ -75,7 +123,14 @@ export default function MyBookingsPage() {
             </div>
           )}
 
-          {bookings.map((booking) => (
+          {bookings.length > 0 && filteredBookings.length === 0 && (
+            <div className="card">
+              <h3>No bookings in this status</h3>
+              <p className="muted">Choose another filter to view your booking history.</p>
+            </div>
+          )}
+
+          {filteredBookings.map((booking) => (
             <BookingCard key={booking.id} booking={booking} onCancel={handleCancel} busyAction={busyAction} />
           ))}
         </div>

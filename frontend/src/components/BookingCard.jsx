@@ -9,12 +9,15 @@ export default function BookingCard({
   onReject,
   onCancel,
   onDelete,
+  showCancel = true,
+  showDelete = false,
   busyAction,
 }) {
+  const hasValidId = booking?.id !== null && booking?.id !== undefined && booking?.id !== ''
   const canApprove = isAdmin && booking.status === 'PENDING'
   const canReject = isAdmin && booking.status === 'PENDING'
-  const canCancel = booking.status === 'PENDING' || booking.status === 'APPROVED'
-  const canDelete = isAdmin
+  const canCancel = showCancel && (booking.status === 'PENDING' || booking.status === 'APPROVED')
+  const canDelete = showDelete && isAdmin
 
   return (
     <article className="booking-card card">
@@ -56,9 +59,9 @@ export default function BookingCard({
         {canApprove && (
           <button
             type="button"
-            className="btn primary"
+            className="btn booking-approve-btn"
             onClick={() => onApprove?.(booking)}
-            disabled={busyAction === `approve-${booking.id}`}
+            disabled={!hasValidId || busyAction === `approve-${booking.id}`}
           >
             Approve
           </button>
@@ -67,9 +70,9 @@ export default function BookingCard({
         {canReject && (
           <button
             type="button"
-            className="btn"
+            className="btn booking-reject-btn"
             onClick={() => onReject?.(booking)}
-            disabled={busyAction === `reject-${booking.id}`}
+            disabled={!hasValidId || busyAction === `reject-${booking.id}`}
           >
             Reject
           </button>
@@ -78,9 +81,9 @@ export default function BookingCard({
         {canCancel && (
           <button
             type="button"
-            className="btn"
+            className="btn booking-cancel-btn"
             onClick={() => onCancel?.(booking)}
-            disabled={busyAction === `cancel-${booking.id}`}
+            disabled={!hasValidId || busyAction === `cancel-${booking.id}`}
           >
             Cancel
           </button>
@@ -91,7 +94,7 @@ export default function BookingCard({
             type="button"
             className="btn danger"
             onClick={() => onDelete?.(booking)}
-            disabled={busyAction === `delete-${booking.id}`}
+            disabled={!hasValidId || busyAction === `delete-${booking.id}`}
           >
             Delete
           </button>
