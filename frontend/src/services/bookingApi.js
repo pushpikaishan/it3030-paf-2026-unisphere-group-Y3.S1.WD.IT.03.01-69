@@ -5,6 +5,10 @@ export const bookingApi = {
     const { data } = await api.post('/bookings/request', payload)
     return data
   },
+  getBookedSlots: async (resourceId, date) => {
+    const { data } = await api.get(`/bookings/resource/${resourceId}/slots`, { params: { date } })
+    return data
+  },
   getMyBookings: async () => {
     const { data } = await api.get('/bookings/my')
     return data

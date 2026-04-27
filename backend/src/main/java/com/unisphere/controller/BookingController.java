@@ -3,6 +3,7 @@ package com.unisphere.controller;
 import com.unisphere.dto.booking.BookingDecisionDTO;
 import com.unisphere.dto.booking.BookingRequestDTO;
 import com.unisphere.dto.booking.BookingResponseDTO;
+import com.unisphere.dto.booking.BookingSlotDTO;
 import com.unisphere.entity.BookingStatus;
 import com.unisphere.service.BookingService;
 import jakarta.validation.Valid;
@@ -36,6 +37,15 @@ public class BookingController {
     public ResponseEntity<BookingResponseDTO> requestBooking(@Valid @RequestBody BookingRequestDTO request, Authentication authentication) {
         BookingResponseDTO created = bookingService.requestBooking(request, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/resource/{resourceId}/slots")
+    @PreAuthorize("hasAnyRole('USER','ADMIN','MANAGER')")
+    public ResponseEntity<List<BookingSlotDTO>> getBookedSlots(
+        @PathVariable Long resourceId,
+        @RequestParam LocalDate date
+    ) {
+        return ResponseEntity.ok(bookingService.getBookedSlots(resourceId, date));
     }
 
     @GetMapping("/my")

@@ -9,7 +9,6 @@ export default function ResourceCard({
   onToggleStatus,
   onBookNow,
   canBook,
-  isBooked,
 }) {
   return (
     <article className="resource-card">
@@ -28,8 +27,8 @@ export default function ResourceCard({
         </Link>
 
         {!isAdmin && (
-          <button className="btn primary" type="button" onClick={() => onBookNow?.(resource)} disabled={!canBook || isBooked}>
-            {isBooked ? 'Booked' : 'Request Booking'}
+          <button className="btn primary" type="button" onClick={() => onBookNow?.(resource)} disabled={!canBook}>
+            Request Booking
           </button>
         )}
 

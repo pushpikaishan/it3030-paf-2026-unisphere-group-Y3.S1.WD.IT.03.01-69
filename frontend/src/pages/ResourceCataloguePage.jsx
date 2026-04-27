@@ -13,7 +13,6 @@ import {
   useUpdateResourceStatus,
 } from '../hooks/useResources'
 import { useAuth } from '../hooks/useAuth'
-import { useMyBookings } from '../hooks/useBookings'
 import { useNavigate } from 'react-router-dom'
 import { bookingApi } from '../services/bookingApi'
 import './css/resources.css'
@@ -45,6 +44,11 @@ const SLOT_OPTIONS = Array.from({ length: 10 }, (_, index) => {
   }
 })
 
+const toMinutes = (timeValue) => {
+  const [hours, minutes] = String(timeValue || '00:00').split(':').map(Number)
+  return hours * 60 + minutes
+}
+
 const normalizeErrorMessage = (error, fallback) => {
   const message =
     error?.response?.data?.message ||
@@ -72,6 +76,8 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
   const [bookingForm, setBookingForm] = useState(initialBookingForm)
   const [bookingErrors, setBookingErrors] = useState({})
   const [bookingSubmitting, setBookingSubmitting] = useState(false)
+  const [bookedSlots, setBookedSlots] = useState([])
+  const [bookedSlotsLoading, setBookedSlotsLoading] = useState(false)
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
@@ -94,7 +100,6 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
 
   const { data, isLoading, isError, error, refetch } = useResources(queryParams)
   const { data: resourceTypes } = useResourceTypes()
-  const { data: myBookings = [], refetch: refetchMyBookings } = useMyBookings(Boolean(canRequestBookings))
 
   const createMutation = useCreateResource()
   const updateMutation = useUpdateResource()
@@ -103,15 +108,6 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
 
   const content = data?.content || []
   const totalPages = data?.totalPages || 1
-  const activeBookedResourceIds = useMemo(
-    () =>
-      new Set(
-        (Array.isArray(myBookings) ? myBookings : [])
-          .filter((booking) => booking?.status === 'PENDING' || booking?.status === 'APPROVED')
-          .map((booking) => Number(booking.resourceId)),
-      ),
-    [myBookings],
-  )
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -183,6 +179,7 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
     setBookingTarget(null)
     setBookingForm(initialBookingForm)
     setBookingErrors({})
+    setBookedSlots([])
   }
 
   const openBookingModal = (resource) => {
@@ -196,11 +193,45 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
   }
 
   const setBookingField = (key, value) => {
-    setBookingForm((prev) => ({ ...prev, [key]: value }))
+    setBookingForm((prev) => ({
+      ...prev,
+      [key]: value,
+      ...(key === 'bookingDate' ? { startTime: '' } : {}),
+    }))
     setBookingErrors((prev) => ({ ...prev, [key]: undefined }))
   }
 
   const getEndTimeForStart = (startTime) => SLOT_OPTIONS.find((slot) => slot.value === startTime)?.endTime || ''
+  const isSlotUnavailable = (slot) =>
+    bookedSlots.some((booked) => toMinutes(slot.value) < toMinutes(booked.endTime) && toMinutes(slot.endTime) > toMinutes(booked.startTime))
+
+  useEffect(() => {
+    if (!bookingTarget?.id || !bookingForm.bookingDate) {
+      setBookedSlots([])
+      return
+    }
+
+    let isActive = true
+    setBookedSlotsLoading(true)
+    bookingApi
+      .getBookedSlots(bookingTarget.id, bookingForm.bookingDate)
+      .then((slots) => {
+        if (!isActive) return
+        setBookedSlots(Array.isArray(slots) ? slots : [])
+      })
+      .catch(() => {
+        if (!isActive) return
+        setBookedSlots([])
+      })
+      .finally(() => {
+        if (!isActive) return
+        setBookedSlotsLoading(false)
+      })
+
+    return () => {
+      isActive = false
+    }
+  }, [bookingTarget?.id, bookingForm.bookingDate])
 
   const validateBookingForm = () => {
     const nextErrors = {}
@@ -219,8 +250,11 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
       }
     }
 
-    if (bookingForm.startTime && !getEndTimeForStart(bookingForm.startTime)) {
+    const selectedSlot = SLOT_OPTIONS.find((slot) => slot.value === bookingForm.startTime)
+    if (bookingForm.startTime && !selectedSlot) {
       nextErrors.startTime = 'Select a valid 2-hour slot between 08:00 and 19:00'
+    } else if (selectedSlot && isSlotUnavailable(selectedSlot)) {
+      nextErrors.startTime = 'This time slot is already booked for the selected date'
     }
 
     if (!bookingForm.purpose.trim()) nextErrors.purpose = 'Purpose is required'
@@ -252,7 +286,6 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
     setBookingSubmitting(true)
     try {
       const createdBooking = await bookingApi.requestBooking(payload)
-      await refetchMyBookings()
       closeBookingModal()
       navigate('/my-bookings', {
         state: {
@@ -365,7 +398,6 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
                   isAdmin={canManageResources}
                   onBookNow={handleBookNow}
                   canBook={resource.status === 'ACTIVE' && canRequestBookings}
-                  isBooked={activeBookedResourceIds.has(Number(resource.id))}
                   onEdit={(item) => {
                     setEditingResource(item)
                     setFormOpen(true)
@@ -447,15 +479,25 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
                   <select
                     value={bookingForm.startTime}
                     onChange={(e) => setBookingField('startTime', e.target.value)}
+                    disabled={!bookingForm.bookingDate || bookedSlotsLoading}
                   >
-                    <option value="">Select a slot</option>
+                    <option value="">
+                      {!bookingForm.bookingDate
+                        ? 'Select a date first'
+                        : bookedSlotsLoading
+                          ? 'Loading available slots...'
+                          : 'Select a slot'}
+                    </option>
                     {SLOT_OPTIONS.map((slot) => (
-                      <option key={slot.value} value={slot.value}>
-                        {slot.label}
+                      <option key={slot.value} value={slot.value} disabled={isSlotUnavailable(slot)}>
+                        {slot.label}{isSlotUnavailable(slot) ? ' (Unavailable)' : ''}
                       </option>
                     ))}
                   </select>
                   {bookingErrors.startTime && <small className="form-error">{bookingErrors.startTime}</small>}
+                  {bookingForm.bookingDate && !bookedSlotsLoading && SLOT_OPTIONS.every(isSlotUnavailable) && (
+                    <small className="form-error">All slots are already booked on this date.</small>
+                  )}
                 </label>
 
                 <label>

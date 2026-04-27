@@ -2,6 +2,7 @@ package com.unisphere.service;
 
 import com.unisphere.dto.booking.BookingRequestDTO;
 import com.unisphere.dto.booking.BookingResponseDTO;
+import com.unisphere.dto.booking.BookingSlotDTO;
 import com.unisphere.entity.BookingStatus;
 import java.time.LocalDate;
 import java.util.List;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Page;
 public interface BookingService {
 
     BookingResponseDTO requestBooking(BookingRequestDTO request, String requesterEmail);
+    List<BookingSlotDTO> getBookedSlots(Long resourceId, LocalDate bookingDate);
 
     List<BookingResponseDTO> getMyBookings(String requesterEmail);
 

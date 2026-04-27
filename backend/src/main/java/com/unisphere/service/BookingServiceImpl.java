@@ -2,6 +2,7 @@ package com.unisphere.service;
 
 import com.unisphere.dto.booking.BookingRequestDTO;
 import com.unisphere.dto.booking.BookingResponseDTO;
+import com.unisphere.dto.booking.BookingSlotDTO;
 import com.unisphere.entity.Booking;
 import com.unisphere.entity.BookingStatus;
 import com.unisphere.entity.Notification;
@@ -69,6 +70,26 @@ public class BookingServiceImpl implements BookingService {
         Booking saved = bookingRepository.save(Objects.requireNonNull(booking));
         notifyUserIfPossible(saved, "Booking Request Submitted", buildPendingMessage(saved));
         return toResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BookingSlotDTO> getBookedSlots(Long resourceId, LocalDate bookingDate) {
+        findResource(resourceId);
+        return bookingRepository
+            .findByResourceIdAndBookingDateAndStatusInOrderByStartTimeAsc(
+                resourceId,
+                bookingDate,
+                List.of(BookingStatus.PENDING, BookingStatus.APPROVED)
+            )
+            .stream()
+            .map(booking -> BookingSlotDTO.builder()
+                .bookingId(booking.getId())
+                .startTime(booking.getStartTime())
+                .endTime(booking.getEndTime())
+                .status(booking.getStatus())
+                .build())
+            .toList();
     }
 
     @Override
