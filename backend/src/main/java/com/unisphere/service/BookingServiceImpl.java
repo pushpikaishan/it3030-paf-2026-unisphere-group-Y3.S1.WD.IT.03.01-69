@@ -7,6 +7,7 @@ import com.unisphere.entity.BookingStatus;
 import com.unisphere.entity.Notification;
 import com.unisphere.entity.Resource;
 import com.unisphere.entity.ResourceStatus;
+import com.unisphere.entity.ResourceType;
 import com.unisphere.entity.User;
 import com.unisphere.exception.BookingConflictException;
 import com.unisphere.exception.BookingNotFoundException;
@@ -78,7 +79,14 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<BookingResponseDTO> getAllBookings(BookingStatus status, Long resourceId, LocalDate bookingDate, int page, int size) {
+    public Page<BookingResponseDTO> getAllBookings(
+        BookingStatus status,
+        Long resourceId,
+        ResourceType resourceType,
+        LocalDate bookingDate,
+        int page,
+        int size
+    ) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
         Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -91,6 +99,10 @@ public class BookingServiceImpl implements BookingService {
 
         if (resourceId != null) {
             specification = specification.and((root, query, cb) -> cb.equal(root.get("resource").get("id"), resourceId));
+        }
+
+        if (resourceType != null) {
+            specification = specification.and((root, query, cb) -> cb.equal(root.get("resource").get("type"), resourceType));
         }
 
         if (bookingDate != null) {

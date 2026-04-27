@@ -3,6 +3,7 @@ package com.unisphere.service;
 import com.unisphere.dto.booking.BookingRequestDTO;
 import com.unisphere.dto.booking.BookingResponseDTO;
 import com.unisphere.entity.BookingStatus;
+import com.unisphere.entity.ResourceType;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -13,7 +14,14 @@ public interface BookingService {
 
     List<BookingResponseDTO> getMyBookings(String requesterEmail);
 
-    Page<BookingResponseDTO> getAllBookings(BookingStatus status, Long resourceId, LocalDate bookingDate, int page, int size);
+    Page<BookingResponseDTO> getAllBookings(
+        BookingStatus status,
+        Long resourceId,
+        ResourceType resourceType,
+        LocalDate bookingDate,
+        int page,
+        int size
+    );
 
     BookingResponseDTO getBookingById(Long id, String requesterEmail, boolean isAdmin);
 

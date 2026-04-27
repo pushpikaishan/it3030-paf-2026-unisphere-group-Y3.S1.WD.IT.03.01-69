@@ -194,11 +194,67 @@
 }
 
 .booking-filters {
-  align-self: start;
-  position: sticky;
-  top: 16px;
   display: grid;
-  gap: 10px;
+  gap: 14px;
+}
+
+.booking-filters-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.booking-filter-group {
+  display: grid;
+  gap: 8px;
+  min-width: min(100%, 420px);
+  flex: 1;
+}
+
+.booking-filter-title {
+  font-weight: 700;
+  color: #0a2c5a;
+}
+
+.booking-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.booking-chip {
+  border: 1px solid #d1def2;
+  background: #f8fbff;
+  color: #0a2c5a;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.booking-chip.active {
+  border-color: #016bae;
+  background: linear-gradient(135deg, #016bae, #053769);
+  color: #ffffff;
+}
+
+.booking-filters-actions {
+  align-items: end;
+  justify-content: space-between;
+}
+
+.booking-date-filter {
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.booking-date-filter input {
+  border: 1px solid #d1def2;
+  border-radius: 10px;
+  padding: 9px 10px;
+  font: inherit;
 }
 
 .booking-modal-backdrop {
@@ -234,8 +290,9 @@
     grid-template-columns: 1fr;
   }
 
-  .booking-filters {
-    position: static;
+  .booking-filters-actions {
+    align-items: stretch;
+    justify-content: flex-start;
   }
 }
 

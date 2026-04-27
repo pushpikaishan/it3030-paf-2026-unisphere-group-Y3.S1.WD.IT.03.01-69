@@ -1,39 +1,68 @@
-export default function BookingFilters({ filters, onChange, onReset, resources = [] }) {
+const statuses = ['', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED']
+
+const formatLabel = (value) =>
+  value
+    ? value
+        .toLowerCase()
+        .split('_')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ')
+    : 'All'
+
+export default function BookingFilters({ filters, onChange, onReset, resourceTypes = [] }) {
   return (
-    <aside className="booking-filters card">
-      <h3>Filters</h3>
+    <section className="booking-filters card">
+      <div className="booking-filters-row">
+        <div className="booking-filter-group">
+          <span className="booking-filter-title">Status</span>
+          <div className="booking-chip-row">
+            {statuses.map((status) => (
+              <button
+                key={status || 'ALL'}
+                type="button"
+                className={`booking-chip${filters.status === status ? ' active' : ''}`}
+                onClick={() => onChange('status', status)}
+              >
+                {formatLabel(status)}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      <label className="filter-group">
-        <span>Status</span>
-        <select value={filters.status} onChange={(e) => onChange('status', e.target.value)}>
-          <option value="">All</option>
-          <option value="PENDING">PENDING</option>
-          <option value="APPROVED">APPROVED</option>
-          <option value="REJECTED">REJECTED</option>
-          <option value="CANCELLED">CANCELLED</option>
-        </select>
-      </label>
+        <div className="booking-filter-group">
+          <span className="booking-filter-title">Resource Type</span>
+          <div className="booking-chip-row">
+            <button
+              type="button"
+              className={`booking-chip${!filters.resourceType ? ' active' : ''}`}
+              onClick={() => onChange('resourceType', '')}
+            >
+              All
+            </button>
+            {resourceTypes.map((type) => (
+              <button
+                key={type}
+                type="button"
+                className={`booking-chip${filters.resourceType === type ? ' active' : ''}`}
+                onClick={() => onChange('resourceType', type)}
+              >
+                {formatLabel(type)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
-      <label className="filter-group">
-        <span>Resource</span>
-        <select value={filters.resourceId} onChange={(e) => onChange('resourceId', e.target.value)}>
-          <option value="">All</option>
-          {resources.map((resource) => (
-            <option key={resource.id} value={resource.id}>
-              {resource.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="booking-filters-row booking-filters-actions">
+        <label className="booking-date-filter">
+          <span className="booking-filter-title">Date</span>
+          <input type="date" value={filters.date} onChange={(e) => onChange('date', e.target.value)} />
+        </label>
 
-      <label className="filter-group">
-        <span>Date</span>
-        <input type="date" value={filters.date} onChange={(e) => onChange('date', e.target.value)} />
-      </label>
-
-      <button type="button" className="btn" onClick={onReset}>
-        Reset Filters
-      </button>
-    </aside>
+        <button type="button" className="btn" onClick={onReset}>
+          Reset Filters
+        </button>
+      </div>
+    </section>
   )
 }

@@ -4,6 +4,7 @@ import com.unisphere.dto.booking.BookingDecisionDTO;
 import com.unisphere.dto.booking.BookingRequestDTO;
 import com.unisphere.dto.booking.BookingResponseDTO;
 import com.unisphere.entity.BookingStatus;
+import com.unisphere.entity.ResourceType;
 import com.unisphere.service.BookingService;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
@@ -57,11 +58,12 @@ public class BookingController {
     public ResponseEntity<Page<BookingResponseDTO>> getAllBookings(
         @RequestParam(required = false) BookingStatus status,
         @RequestParam(required = false) Long resourceId,
+        @RequestParam(required = false) ResourceType resourceType,
         @RequestParam(required = false) LocalDate date,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(bookingService.getAllBookings(status, resourceId, date, page, size));
+        return ResponseEntity.ok(bookingService.getAllBookings(status, resourceId, resourceType, date, page, size));
     }
 
     @GetMapping("/{id}")

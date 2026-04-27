@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import BookingCard from '../../components/BookingCard'
 import BookingDecisionModal from '../../components/BookingDecisionModal'
 import BookingFilters from '../../components/BookingFilters'
@@ -14,7 +14,7 @@ import '../css/bookings.css'
 
 const initialFilters = {
   status: '',
-  resourceId: '',
+  resourceType: '',
   date: '',
 }
 
@@ -35,7 +35,7 @@ export default function AdminBookings() {
 
   const queryParams = {
     status: filters.status || undefined,
-    resourceId: filters.resourceId || undefined,
+    resourceType: filters.resourceType || undefined,
     date: filters.date || undefined,
     page,
     size: 10,
@@ -51,6 +51,11 @@ export default function AdminBookings() {
 
   const bookings = data?.content || []
   const totalPages = data?.totalPages || 1
+  const resourceTypes = useMemo(
+    () =>
+      [...new Set((resourcesData?.content || []).map((resource) => resource.type).filter(Boolean))].sort(),
+    [resourcesData],
+  )
 
   const onFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -112,12 +117,12 @@ export default function AdminBookings() {
     )
 
   return (
-    <section className="booking-admin-layout">
+    <section className="bookings-layout">
       <BookingFilters
         filters={filters}
         onChange={onFilterChange}
         onReset={resetFilters}
-        resources={resourcesData?.content || []}
+        resourceTypes={resourceTypes}
       />
 
       <div className="booking-list-wrap">
