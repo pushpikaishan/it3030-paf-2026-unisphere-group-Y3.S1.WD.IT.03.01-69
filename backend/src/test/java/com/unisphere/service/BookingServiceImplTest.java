@@ -113,8 +113,8 @@ class BookingServiceImplTest {
         BookingRequestDTO dto = new BookingRequestDTO();
         dto.setResourceId(10L);
         dto.setBookingDate(LocalDate.now().plusDays(1));
-        dto.setStartTime(LocalTime.of(9, 30));
-        dto.setEndTime(LocalTime.of(11, 30));
+        dto.setStartTime(LocalTime.of(9, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
         dto.setPurpose("Overlap test");
         dto.setExpectedAttendees(10);
 

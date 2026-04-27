@@ -61,6 +61,7 @@ public class BookingServiceImpl implements BookingService {
             .endTime(request.getEndTime())
             .purpose(request.getPurpose().trim())
             .expectedAttendees(request.getExpectedAttendees())
+            .resourceName(resource.getName())
             .status(BookingStatus.PENDING)
             .build();
 
@@ -77,7 +78,7 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     public List<BookingResponseDTO> getMyBookings(String requesterEmail) {
         User requester = findUserByEmail(requesterEmail);
-        return bookingRepository.findByUserIdOrderByCreatedAtDesc(requester.getId()).stream()
+        return bookingRepository.findByUserIdOrderByIdDesc(requester.getId()).stream()
             .map(this::toResponse)
             .toList();
     }
@@ -126,7 +127,11 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException("Only pending bookings can be approved");
         }
 
-        ensureResourceIsBookable(booking.getResource());
+        Resource resource = booking.getResource();
+        if (resource == null) {
+            throw new IllegalArgumentException("Cannot approve booking because the linked resource no longer exists");
+        }
+        ensureResourceIsBookable(resource);
         ensureNoConflictForApprove(booking);
 
         booking.setStatus(BookingStatus.APPROVED);
@@ -250,6 +255,9 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void ensureNoConflictForApprove(Booking booking) {
+        if (booking.getResource() == null) {
+            throw new IllegalArgumentException("Cannot approve booking because the linked resource no longer exists");
+        }
         boolean conflict = bookingRepository.existsByResourceIdAndBookingDateAndStatusInAndIdNotAndStartTimeLessThanAndEndTimeGreaterThan(
             booking.getResource().getId(),
             booking.getBookingDate(),
@@ -278,26 +286,42 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private String buildStatusMessage(Booking booking, String verb) {
-        return "Your booking for " + booking.getResource().getName()
+        return "Your booking for " + getSafeResourceName(booking)
             + " on " + booking.getBookingDate()
             + " (" + booking.getStartTime() + " - " + booking.getEndTime() + ") was " + verb + ".";
     }
 
     private String buildPendingMessage(Booking booking) {
-        return "Your booking request for " + booking.getResource().getName()
+        return "Your booking request for " + getSafeResourceName(booking)
             + " on " + booking.getBookingDate()
             + " (" + booking.getStartTime() + " - " + booking.getEndTime() + ") is pending admin approval.";
     }
 
+    private String getSafeResourceName(Booking booking) {
+        if (booking.getResource() != null && booking.getResource().getName() != null && !booking.getResource().getName().isBlank()) {
+            return booking.getResource().getName();
+        }
+        if (booking.getResourceName() != null && !booking.getResourceName().isBlank()) {
+            return booking.getResourceName();
+        }
+        return "Unknown Resource";
+    }
+
     private BookingResponseDTO toResponse(Booking booking) {
+        Resource resource = booking.getResource();
+        User user = booking.getUser();
+        Long resourceId = resource != null ? resource.getId() : null;
+        String resourceName = resource != null ? resource.getName() : booking.getResourceName();
+        String resourceLocation = resource != null ? resource.getLocation() : null;
+
         return BookingResponseDTO.builder()
             .id(booking.getId())
-            .resourceId(booking.getResource().getId())
-            .resourceName(booking.getResource().getName())
-            .resourceLocation(booking.getResource().getLocation())
-            .userId(booking.getUser().getId())
-            .userName(booking.getUser().getName())
-            .userEmail(booking.getUser().getEmail())
+            .resourceId(resourceId)
+            .resourceName(resourceName)
+            .resourceLocation(resourceLocation)
+            .userId(user != null ? user.getId() : null)
+            .userName(user != null ? user.getName() : null)
+            .userEmail(user != null ? user.getEmail() : null)
             .bookingDate(booking.getBookingDate())
             .startTime(booking.getStartTime())
             .endTime(booking.getEndTime())

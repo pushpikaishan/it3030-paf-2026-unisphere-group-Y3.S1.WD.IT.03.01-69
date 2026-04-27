@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface BookingRepository extends JpaRepository<Booking, Long>, JpaSpecificationExecutor<Booking> {
 
-    List<Booking> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<Booking> findByUserIdOrderByIdDesc(Long userId);
 
     boolean existsByResourceIdAndBookingDateAndStatusInAndStartTimeLessThanAndEndTimeGreaterThan(
         Long resourceId,

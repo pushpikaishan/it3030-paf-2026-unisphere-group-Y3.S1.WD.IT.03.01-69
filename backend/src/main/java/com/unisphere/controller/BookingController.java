@@ -45,7 +45,7 @@ public class BookingController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<Page<BookingResponseDTO>> getAllBookings(
         @RequestParam(required = false) BookingStatus status,
         @RequestParam(required = false) Long resourceId,
@@ -64,13 +64,13 @@ public class BookingController {
     }
 
     @PatchMapping("/{id}/approve")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<BookingResponseDTO> approveBooking(@PathVariable Long id) {
         return ResponseEntity.ok(bookingService.approveBooking(id));
     }
 
     @PatchMapping("/{id}/reject")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<BookingResponseDTO> rejectBooking(@PathVariable Long id, @Valid @RequestBody BookingDecisionDTO request) {
         return ResponseEntity.ok(bookingService.rejectBooking(id, request.getReason()));
     }
@@ -83,7 +83,7 @@ public class BookingController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<Void> deleteBooking(@PathVariable Long id) {
         bookingService.deleteBooking(id);
         return ResponseEntity.noContent().build();

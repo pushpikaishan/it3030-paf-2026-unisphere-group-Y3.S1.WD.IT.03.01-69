@@ -13,7 +13,7 @@ import { useResources } from '../../hooks/useResources'
 import '../css/bookings.css'
 
 const initialFilters = {
-  status: '',
+  status: 'PENDING',
   resourceId: '',
   date: '',
 }
@@ -123,7 +123,7 @@ export default function AdminBookings() {
       <div className="booking-list-wrap">
         <div className="card bookings-header">
           <h2>Booking Management</h2>
-          <p className="muted">Review all booking requests and make approval decisions.</p>
+          <p className="muted">Review booking requests and make approval decisions.</p>
         </div>
 
         {feedback && <div className={`resource-toast ${feedback.kind}`}>{feedback.message}</div>}

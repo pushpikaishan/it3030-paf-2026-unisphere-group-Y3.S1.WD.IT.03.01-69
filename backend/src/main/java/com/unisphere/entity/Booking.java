@@ -20,6 +20,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 @Entity
 @Table(name = "bookings")
@@ -36,10 +38,12 @@ public class Booking {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "resource_id", nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private Resource resource;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private User user;
 
     @Column(name = "booking_date", nullable = false)
@@ -56,6 +60,9 @@ public class Booking {
 
     @Column(name = "expected_attendees", nullable = false)
     private Integer expectedAttendees;
+
+    @Column(name = "resource_name", length = 120)
+    private String resourceName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

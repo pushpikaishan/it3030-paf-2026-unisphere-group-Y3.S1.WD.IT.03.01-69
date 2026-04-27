@@ -11,6 +11,15 @@ export const bookingApi = {
   },
   getBookings: async (params = {}) => {
     const { data } = await api.get('/bookings', { params })
+    if (Array.isArray(data)) {
+      return {
+        content: data,
+        totalPages: 1,
+        totalElements: data.length,
+        number: 0,
+        size: data.length,
+      }
+    }
     return data
   },
   getBookingById: async (id) => {
