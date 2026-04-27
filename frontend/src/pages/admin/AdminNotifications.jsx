@@ -25,6 +25,7 @@ export default function AdminNotifications() {
   const [announcementMessage, setAnnouncementMessage] = useState('')
   const [announcementAttachment, setAnnouncementAttachment] = useState(null)
   const [submittingAnnouncement, setSubmittingAnnouncement] = useState(false)
+  const [deletingAnnouncementId, setDeletingAnnouncementId] = useState(null)
 
   const pendingCount = useMemo(() => requests.filter((item) => !item.resolved).length, [requests])
 
@@ -123,12 +124,33 @@ export default function AdminNotifications() {
     }
   }
 
+  const deleteAnnouncement = async (announcement) => {
+    if (!announcement?.id) return
+    const title = announcement?.title || `#${announcement.id}`
+    const confirmed = window.confirm(`Delete announcement ${title}?`)
+    if (!confirmed) return
+
+    try {
+      setDeletingAnnouncementId(announcement.id)
+      setError('')
+      await announcementApi.deleteAnnouncement(announcement.id)
+      setStatus('Announcement deleted successfully.')
+      await loadAnnouncements()
+    } catch (err) {
+      setError(err?.response?.data?.message || err.message || 'Could not delete announcement.')
+    } finally {
+      setDeletingAnnouncementId(null)
+    }
+  }
+
   return (
     <div className="stack">
-      <div className="card">
+      <div className="card admin-notify-header-card">
         <h2>Notifications</h2>
         <p className="muted">Manage support messages and publish announcements to USER or TECHNICIAN roles.</p>
-        {activeTab === 'messages' && <p className="muted">Pending problems: {pendingCount}</p>}
+        <p className="muted admin-notify-subline">
+          {activeTab === 'messages' ? `Pending problems: ${pendingCount}` : '\u00A0'}
+        </p>
         {status && <p className="muted">{status}</p>}
         {error && <p className="error">{error}</p>}
       </div>
@@ -288,6 +310,17 @@ export default function AdminNotifications() {
                   <p>
                     <strong>Created:</strong> {formatDate(item.createdAt)}
                   </p>
+
+                  <div>
+                    <button
+                      type="button"
+                      className="button danger"
+                      onClick={() => deleteAnnouncement(item)}
+                      disabled={deletingAnnouncementId === item.id}
+                    >
+                      {deletingAnnouncementId === item.id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>

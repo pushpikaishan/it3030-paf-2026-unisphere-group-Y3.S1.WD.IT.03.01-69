@@ -13,8 +13,9 @@ import {
   useUpdateResourceStatus,
 } from '../hooks/useResources'
 import { useAuth } from '../hooks/useAuth'
-import { useBookings } from '../hooks/useBookings'
+import { useMyBookings } from '../hooks/useBookings'
 import { useNavigate } from 'react-router-dom'
+import { bookingApi } from '../services/bookingApi'
 import './css/resources.css'
 
 const initialFilters = {
@@ -36,8 +37,8 @@ const normalizeErrorMessage = (error, fallback) => {
 export default function ResourceCataloguePage({ managementEnabled = false }) {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { addBooking, isBookedByUser } = useBookings()
   const isPrivileged = user?.role === 'ADMIN' || user?.role === 'MANAGER'
+  const canRequestBookings = user?.role === 'USER'
   const canManageResources = managementEnabled && isPrivileged
 
   const [filters, setFilters] = useState(initialFilters)
@@ -70,6 +71,7 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
 
   const { data, isLoading, isError, error, refetch } = useResources(queryParams)
   const { data: resourceTypes } = useResourceTypes()
+  const { data: myBookings = [], refetch: refetchMyBookings } = useMyBookings(Boolean(canRequestBookings))
 
   const createMutation = useCreateResource()
   const updateMutation = useUpdateResource()
@@ -78,6 +80,15 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
 
   const content = data?.content || []
   const totalPages = data?.totalPages || 1
+  const activeBookedResourceIds = useMemo(
+    () =>
+      new Set(
+        (Array.isArray(myBookings) ? myBookings : [])
+          .filter((booking) => booking?.status === 'PENDING' || booking?.status === 'APPROVED')
+          .map((booking) => Number(booking.resourceId)),
+      ),
+    [myBookings],
+  )
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -135,20 +146,69 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
     }
   }
 
-  const handleBookNow = (resource) => {
+  const toLocalDate = (date) => {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  const toLocalTime = (date) => {
+    const h = String(date.getHours()).padStart(2, '0')
+    const m = String(date.getMinutes()).padStart(2, '0')
+    return `${h}:${m}`
+  }
+
+  const buildQuickBookingPayload = (resource) => {
+    const start = new Date()
+    start.setSeconds(0, 0)
+    start.setMinutes(0)
+    start.setHours(start.getHours() + 1)
+
+    // If it's too late in the day, schedule for tomorrow morning.
+    if (start.getHours() >= 22) {
+      start.setDate(start.getDate() + 1)
+      start.setHours(9, 0, 0, 0)
+    }
+
+    const end = new Date(start)
+    end.setHours(end.getHours() + 1)
+
+    const capacity = Number(resource?.capacity)
+    const expectedAttendees = Number.isFinite(capacity) && capacity > 0
+      ? Math.min(capacity, 10)
+      : 1
+
+    return {
+      resourceId: resource.id,
+      bookingDate: toLocalDate(start),
+      startTime: toLocalTime(start),
+      endTime: toLocalTime(end),
+      purpose: `Quick booking for ${resource.name}`,
+      expectedAttendees,
+    }
+  }
+
+  const handleBookNow = async (resource) => {
     if (!user) {
       notify('error', 'Please log in to book resources.')
       navigate('/login')
       return
     }
 
-    const result = addBooking(resource, user)
-    if (result.ok) {
-      notify('success', `${resource.name} booked successfully.`)
+    if (!canRequestBookings) {
+      notify('error', 'Only USER accounts can create booking requests.')
       return
     }
 
-    notify('error', result.message || 'Could not complete booking.')
+    try {
+      const payload = buildQuickBookingPayload(resource)
+      await bookingApi.requestBooking(payload)
+      await refetchMyBookings()
+      notify('success', `${resource.name} booking request submitted. Status: PENDING.`)
+    } catch (err) {
+      notify('error', normalizeErrorMessage(err, 'Could not complete booking request.'))
+    }
   }
 
   return (
@@ -231,8 +291,8 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
                   resource={resource}
                   isAdmin={canManageResources}
                   onBookNow={handleBookNow}
-                  canBook={resource.status === 'ACTIVE'}
-                  isBooked={isBookedByUser(resource.id, user)}
+                  canBook={resource.status === 'ACTIVE' && canRequestBookings}
+                  isBooked={activeBookedResourceIds.has(Number(resource.id))}
                   onEdit={(item) => {
                     setEditingResource(item)
                     setFormOpen(true)

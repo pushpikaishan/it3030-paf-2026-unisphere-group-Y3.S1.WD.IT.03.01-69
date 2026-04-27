@@ -21,4 +21,8 @@ export const announcementApi = {
     })
     return data
   },
+  deleteAnnouncement: async (id) => {
+    if (!id) throw new Error('Missing announcement id')
+    await api.delete(`/announcements/${id}`)
+  },
 }

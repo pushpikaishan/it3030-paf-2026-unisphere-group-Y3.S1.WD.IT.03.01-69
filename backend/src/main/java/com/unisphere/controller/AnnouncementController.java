@@ -4,9 +4,12 @@ import com.unisphere.entity.Announcement;
 import com.unisphere.entity.AnnouncementTargetRole;
 import com.unisphere.service.AnnouncementService;
 import java.util.List;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -56,5 +59,12 @@ public class AnnouncementController {
         @RequestParam(value = "attachment", required = false) MultipartFile attachment
     ) {
         return announcementService.create(targetRole, title, message, attachment);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        announcementService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
