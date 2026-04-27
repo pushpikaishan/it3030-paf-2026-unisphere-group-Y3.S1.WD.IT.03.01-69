@@ -2,6 +2,8 @@ package com.unisphere.service;
 
 import com.unisphere.entity.IncidentTicket;
 import com.unisphere.entity.Role;
+import com.unisphere.entity.Resource;
+import com.unisphere.entity.ResourceStatus;
 import com.unisphere.entity.TicketAttachment;
 import com.unisphere.entity.TicketCategory;
 import com.unisphere.entity.TicketComment;
@@ -84,10 +86,11 @@ public class TicketService {
     public TicketDetailResponse createTicket(CreateTicketRequest request, List<MultipartFile> attachments, Authentication authentication) {
         User actor = resolveActor(authentication);
         validateCreateRequest(request);
+        Long resolvedResourceId = resolveResourceId(request);
 
         IncidentTicket ticket = new IncidentTicket();
         ticket.setReporter(actor);
-        ticket.setResourceId(request.resourceId());
+        ticket.setResourceId(resolvedResourceId);
         ticket.setLocation(trimToNull(request.location()));
         ticket.setCategory(request.category());
         ticket.setPriority(request.priority());
@@ -221,15 +224,37 @@ public class TicketService {
             throw new IllegalArgumentException("Preferred contact must be at least 5 characters");
         }
 
-        boolean hasResourceId = request.resourceId() != null;
-        boolean hasLocation = StringUtils.hasText(request.location());
-        if (!hasResourceId && !hasLocation) {
-            throw new IllegalArgumentException("Provide at least resourceId or location");
-        }
-
-        if (hasResourceId && !resourceRepository.existsById(request.resourceId())) {
+        if (request.resourceId() != null && !resourceRepository.existsById(request.resourceId())) {
             throw new IllegalArgumentException("Resource not found for the provided resource ID");
         }
+    }
+
+    private Long resolveResourceId(CreateTicketRequest request) {
+        if (request.resourceId() != null) {
+            return request.resourceId();
+        }
+
+        String normalizedLocation = trimToNull(request.location());
+        if (normalizedLocation != null) {
+            Resource matched = resourceRepository
+                .findFirstByLocationIgnoreCaseAndStatusOrderByIdAsc(normalizedLocation, ResourceStatus.ACTIVE)
+                .orElse(null);
+            if (matched != null) {
+                return matched.getId();
+            }
+        }
+
+        Resource activeFallback = resourceRepository.findFirstByStatusOrderByIdAsc(ResourceStatus.ACTIVE).orElse(null);
+        if (activeFallback != null) {
+            return activeFallback.getId();
+        }
+
+        Resource anyFallback = resourceRepository.findFirstByOrderByIdAsc().orElse(null);
+        if (anyFallback != null) {
+            return anyFallback.getId();
+        }
+
+        throw new IllegalArgumentException("No resources available to assign. Please create a resource first.");
     }
 
     private void validateStatusTransition(IncidentTicket ticket, TicketStatus target, User actor, UpdateStatusRequest request) {

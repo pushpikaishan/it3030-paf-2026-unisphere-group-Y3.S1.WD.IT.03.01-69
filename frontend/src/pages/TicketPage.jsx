@@ -10,7 +10,6 @@ export default function TicketPage() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [form, setForm] = useState({
-    resourceId: '',
     location: '',
     category: 'HARDWARE',
     priority: 'MEDIUM',
@@ -24,10 +23,6 @@ export default function TicketPage() {
     setError('')
     setNotice('')
 
-    if (!form.resourceId && !form.location.trim()) {
-      setError('Provide either resource ID or location.')
-      return
-    }
     if (form.description.trim().length < 10) {
       setError('Description must be at least 10 characters.')
       return
@@ -43,7 +38,7 @@ export default function TicketPage() {
 
     try {
       const payload = {
-        resourceId: form.resourceId ? Number(form.resourceId) : null,
+        resourceId: null,
         location: form.location || null,
         category: form.category,
         priority: form.priority,
@@ -55,7 +50,6 @@ export default function TicketPage() {
       setNotice('Ticket created successfully.')
       setForm((prev) => ({
         ...prev,
-        resourceId: '',
         location: '',
         description: '',
         preferredContact: '',
@@ -80,18 +74,7 @@ export default function TicketPage() {
         <h3>Create Incident Ticket</h3>
         <form className="ticket-form" onSubmit={handleCreate}>
           <label>
-            Resource ID (optional)
-            <input
-              type="number"
-              min="1"
-              value={form.resourceId}
-              onChange={(event) => setForm((prev) => ({ ...prev, resourceId: event.target.value }))}
-              placeholder="e.g. 2"
-            />
-          </label>
-
-          <label>
-            Location (optional if resource ID is given)
+            Location (optional)
             <input
               type="text"
               value={form.location}
