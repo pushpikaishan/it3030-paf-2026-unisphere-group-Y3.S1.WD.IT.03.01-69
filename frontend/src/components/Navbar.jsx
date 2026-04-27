@@ -32,7 +32,6 @@ export default function Navbar() {
 
   const defaultNav = [
     { to: '/dashboard', label: 'Dashboard' },
-    { to: '/bookings', label: 'Bookings' },
     { to: '/my-bookings', label: 'My Bookings' },
     { to: '/resources', label: 'Resources' },
     { to: '/tickets', label: 'Tickets' },

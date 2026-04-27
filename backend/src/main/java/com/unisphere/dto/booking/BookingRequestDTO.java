@@ -14,6 +14,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class BookingRequestDTO {
+    private static final LocalTime BOOKING_START_WINDOW = LocalTime.of(8, 0);
+    private static final LocalTime BOOKING_END_WINDOW = LocalTime.of(19, 0);
 
     @NotNull(message = "Resource is required")
     private Long resourceId;
@@ -36,11 +38,32 @@ public class BookingRequestDTO {
     @Positive(message = "Expected attendees must be positive")
     private Integer expectedAttendees;
 
-    @AssertTrue(message = "End time must be after start time")
+    @AssertTrue(message = "Bookings must be exactly 2 hours")
     public boolean isTimeRangeValid() {
         if (startTime == null || endTime == null) {
             return true;
         }
-        return endTime.isAfter(startTime);
+        return endTime.equals(startTime.plusHours(2));
+    }
+
+    @AssertTrue(message = "Bookings must be within 08:00 to 19:00")
+    public boolean isWithinBookingWindow() {
+        if (startTime == null || endTime == null) {
+            return true;
+        }
+        return !startTime.isBefore(BOOKING_START_WINDOW) && !endTime.isAfter(BOOKING_END_WINDOW);
+    }
+
+    @AssertTrue(message = "Bookings must be on the hour")
+    public boolean isOnHourBoundary() {
+        if (startTime == null || endTime == null) {
+            return true;
+        }
+        return startTime.getMinute() == 0
+            && startTime.getSecond() == 0
+            && startTime.getNano() == 0
+            && endTime.getMinute() == 0
+            && endTime.getSecond() == 0
+            && endTime.getNano() == 0;
     }
 }

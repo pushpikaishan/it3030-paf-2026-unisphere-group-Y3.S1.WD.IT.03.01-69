@@ -185,6 +185,40 @@
   gap: 10px;
 }
 
+.booking-request-modal {
+  width: min(720px, 100%);
+}
+
+.booking-request-form {
+  display: grid;
+  gap: 10px;
+}
+
+.booking-request-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.booking-request-form span {
+  font-weight: 700;
+  color: #0a2c5a;
+}
+
+.booking-request-form input,
+.booking-request-form select,
+.booking-request-form textarea {
+  border: 1px solid #d1def2;
+  border-radius: 10px;
+  padding: 9px 10px;
+  font: inherit;
+}
+
+.booking-request-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .resource-form label {
   display: grid;
   gap: 6px;
@@ -332,6 +366,10 @@
 @media (max-width: 680px) {
   .resource-grid,
   .resource-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-request-grid {
     grid-template-columns: 1fr;
   }
 

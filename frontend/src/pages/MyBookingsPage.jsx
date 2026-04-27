@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import BookingCard from '../components/BookingCard'
 import { useCancelBooking, useMyBookings } from '../hooks/useBookings'
 import './css/bookings.css'
@@ -12,13 +13,20 @@ const getErrorMessage = (error, fallback) => {
 }
 
 export default function MyBookingsPage() {
-  const [feedback, setFeedback] = useState(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [feedback, setFeedback] = useState(location.state?.bookingFeedback || null)
   const [busyAction, setBusyAction] = useState(null)
 
   const { data, isLoading, isError, error, refetch } = useMyBookings()
   const cancelMutation = useCancelBooking()
 
   const bookings = data || []
+
+  useEffect(() => {
+    if (!location.state?.bookingFeedback) return
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, location.state?.bookingFeedback, navigate])
 
   const handleCancel = async (booking) => {
     setBusyAction(`cancel-${booking.id}`)

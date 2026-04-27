@@ -35,6 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookingServiceImpl implements BookingService {
 
     private static final String CONFLICT_MESSAGE = "This resource is already booked for the selected time.";
+    private static final LocalTime BOOKING_START_WINDOW = LocalTime.of(8, 0);
+    private static final LocalTime BOOKING_END_WINDOW = LocalTime.of(19, 0);
 
     private final BookingRepository bookingRepository;
     private final ResourceRepository resourceRepository;
@@ -218,8 +220,18 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void validateTimeRange(LocalTime startTime, LocalTime endTime) {
-        if (startTime == null || endTime == null || !endTime.isAfter(startTime)) {
-            throw new IllegalArgumentException("End time must be after start time");
+        if (startTime == null || endTime == null) {
+            throw new IllegalArgumentException("Start time and end time are required");
+        }
+        if (startTime.getMinute() != 0 || startTime.getSecond() != 0 || startTime.getNano() != 0
+            || endTime.getMinute() != 0 || endTime.getSecond() != 0 || endTime.getNano() != 0) {
+            throw new IllegalArgumentException("Bookings must be on the hour (for example, 08:00 to 10:00)");
+        }
+        if (!endTime.equals(startTime.plusHours(2))) {
+            throw new IllegalArgumentException("Bookings must be exactly 2 hours");
+        }
+        if (startTime.isBefore(BOOKING_START_WINDOW) || endTime.isAfter(BOOKING_END_WINDOW)) {
+            throw new IllegalArgumentException("Bookings must be within 08:00 to 19:00");
         }
     }
 

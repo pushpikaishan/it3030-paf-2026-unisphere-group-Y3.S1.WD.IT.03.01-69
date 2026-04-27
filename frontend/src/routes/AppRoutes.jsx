@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import NotFound from '../components/NotFound'
 import Loader from '../components/Loader'
 import Dashboard from '../pages/Dashboard'
-import BookingPage from '../pages/BookingPage'
 import MyBookingsPage from '../pages/MyBookingsPage'
 import ResourcePage from '../pages/ResourcePage'
 import ResourceDetailPage from '../pages/ResourceDetailPage'
@@ -34,7 +33,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/" element={<Navigate to={user ? authedHome : '/login'} replace />} />
       <Route path="/dashboard" element={user ? <Dashboard /> : <NotFound />} />
-      <Route path="/bookings" element={user ? <BookingPage /> : <Navigate to="/login" replace />} />
+      <Route path="/bookings" element={user ? <MyBookingsPage /> : <Navigate to="/login" replace />} />
       <Route path="/my-bookings" element={user ? <MyBookingsPage /> : <Navigate to="/login" replace />} />
       <Route path="/resources" element={<ResourcePage />} />
       <Route path="/resources/:id" element={<ResourceDetailPage />} />

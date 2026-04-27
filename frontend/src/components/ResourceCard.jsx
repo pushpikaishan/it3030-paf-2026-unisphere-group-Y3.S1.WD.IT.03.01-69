@@ -29,7 +29,7 @@ export default function ResourceCard({
 
         {!isAdmin && (
           <button className="btn primary" type="button" onClick={() => onBookNow?.(resource)} disabled={!canBook || isBooked}>
-            {isBooked ? 'Booked' : 'Book Now'}
+            {isBooked ? 'Booked' : 'Request Booking'}
           </button>
         )}
 

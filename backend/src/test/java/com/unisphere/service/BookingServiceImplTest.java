@@ -74,7 +74,7 @@ class BookingServiceImplTest {
             .user(user)
             .bookingDate(LocalDate.now().plusDays(1))
             .startTime(LocalTime.of(9, 0))
-            .endTime(LocalTime.of(10, 0))
+            .endTime(LocalTime.of(11, 0))
             .purpose("Workshop")
             .expectedAttendees(20)
             .status(BookingStatus.PENDING)
@@ -87,7 +87,7 @@ class BookingServiceImplTest {
         dto.setResourceId(10L);
         dto.setBookingDate(LocalDate.now().plusDays(1));
         dto.setStartTime(LocalTime.of(9, 0));
-        dto.setEndTime(LocalTime.of(10, 0));
+        dto.setEndTime(LocalTime.of(11, 0));
         dto.setPurpose("Workshop");
         dto.setExpectedAttendees(25);
 
@@ -114,7 +114,7 @@ class BookingServiceImplTest {
         dto.setResourceId(10L);
         dto.setBookingDate(LocalDate.now().plusDays(1));
         dto.setStartTime(LocalTime.of(9, 30));
-        dto.setEndTime(LocalTime.of(10, 30));
+        dto.setEndTime(LocalTime.of(11, 30));
         dto.setPurpose("Overlap test");
         dto.setExpectedAttendees(10);
 
@@ -163,5 +163,20 @@ class BookingServiceImplTest {
     void getBookingById_shouldThrowWhenNotFound() {
         when(bookingRepository.findById(404L)).thenReturn(Optional.empty());
         assertThrows(BookingNotFoundException.class, () -> bookingService.getBookingById(404L, "alice@unisphere.com", true));
+    }
+
+    @Test
+    void requestBooking_shouldThrowWhenOutsideTwoHourSlotRules() {
+        BookingRequestDTO dto = new BookingRequestDTO();
+        dto.setResourceId(10L);
+        dto.setBookingDate(LocalDate.now().plusDays(1));
+        dto.setStartTime(LocalTime.of(7, 0));
+        dto.setEndTime(LocalTime.of(9, 0));
+        dto.setPurpose("Too early");
+        dto.setExpectedAttendees(10);
+
+        assertThrows(IllegalArgumentException.class, () -> bookingService.requestBooking(dto, "alice@unisphere.com"));
+        verify(userRepository, never()).findByEmail(any());
+        verify(resourceRepository, never()).findById(any());
     }
 }

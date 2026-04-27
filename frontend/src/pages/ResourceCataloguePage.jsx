@@ -26,6 +26,25 @@ const initialFilters = {
   status: '',
 }
 
+const initialBookingForm = {
+  bookingDate: '',
+  startTime: '',
+  purpose: '',
+  expectedAttendees: 1,
+}
+
+const SLOT_OPTIONS = Array.from({ length: 10 }, (_, index) => {
+  const startHour = 8 + index
+  const endHour = startHour + 2
+  const startTime = `${String(startHour).padStart(2, '0')}:00`
+  const endTime = `${String(endHour).padStart(2, '0')}:00`
+  return {
+    value: startTime,
+    endTime,
+    label: `${startTime} - ${endTime}`,
+  }
+})
+
 const normalizeErrorMessage = (error, fallback) => {
   const message =
     error?.response?.data?.message ||
@@ -49,6 +68,10 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
   const [formOpen, setFormOpen] = useState(false)
   const [editingResource, setEditingResource] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [bookingTarget, setBookingTarget] = useState(null)
+  const [bookingForm, setBookingForm] = useState(initialBookingForm)
+  const [bookingErrors, setBookingErrors] = useState({})
+  const [bookingSubmitting, setBookingSubmitting] = useState(false)
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
@@ -153,39 +176,96 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
     return `${y}-${m}-${d}`
   }
 
-  const toLocalTime = (date) => {
-    const h = String(date.getHours()).padStart(2, '0')
-    const m = String(date.getMinutes()).padStart(2, '0')
-    return `${h}:${m}`
+  const minBookingDate = toLocalDate(new Date())
+
+  const closeBookingModal = () => {
+    if (bookingSubmitting) return
+    setBookingTarget(null)
+    setBookingForm(initialBookingForm)
+    setBookingErrors({})
   }
 
-  const buildQuickBookingPayload = (resource) => {
-    const start = new Date()
-    start.setSeconds(0, 0)
-    start.setMinutes(0)
-    start.setHours(start.getHours() + 1)
+  const openBookingModal = (resource) => {
+    const capacity = Number(resource?.capacity)
+    setBookingTarget(resource)
+    setBookingErrors({})
+    setBookingForm({
+      ...initialBookingForm,
+      expectedAttendees: Number.isFinite(capacity) && capacity > 0 ? Math.min(capacity, 10) : 1,
+    })
+  }
 
-    // If it's too late in the day, schedule for tomorrow morning.
-    if (start.getHours() >= 22) {
-      start.setDate(start.getDate() + 1)
-      start.setHours(9, 0, 0, 0)
+  const setBookingField = (key, value) => {
+    setBookingForm((prev) => ({ ...prev, [key]: value }))
+    setBookingErrors((prev) => ({ ...prev, [key]: undefined }))
+  }
+
+  const getEndTimeForStart = (startTime) => SLOT_OPTIONS.find((slot) => slot.value === startTime)?.endTime || ''
+
+  const validateBookingForm = () => {
+    const nextErrors = {}
+    const selectedCapacity = Number(bookingTarget?.capacity)
+    const attendees = Number(bookingForm.expectedAttendees)
+
+    if (!bookingForm.bookingDate) nextErrors.bookingDate = 'Date is required'
+    if (!bookingForm.startTime) nextErrors.startTime = 'Start time is required'
+
+    if (bookingForm.bookingDate) {
+      const selectedDate = new Date(`${bookingForm.bookingDate}T00:00:00`)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (selectedDate < today) {
+        nextErrors.bookingDate = 'Booking date cannot be in the past'
+      }
     }
 
-    const end = new Date(start)
-    end.setHours(end.getHours() + 1)
+    if (bookingForm.startTime && !getEndTimeForStart(bookingForm.startTime)) {
+      nextErrors.startTime = 'Select a valid 2-hour slot between 08:00 and 19:00'
+    }
 
-    const capacity = Number(resource?.capacity)
-    const expectedAttendees = Number.isFinite(capacity) && capacity > 0
-      ? Math.min(capacity, 10)
-      : 1
+    if (!bookingForm.purpose.trim()) nextErrors.purpose = 'Purpose is required'
 
-    return {
-      resourceId: resource.id,
-      bookingDate: toLocalDate(start),
-      startTime: toLocalTime(start),
-      endTime: toLocalTime(end),
-      purpose: `Quick booking for ${resource.name}`,
-      expectedAttendees,
+    if (!Number.isFinite(attendees) || attendees <= 0) {
+      nextErrors.expectedAttendees = 'Expected attendees must be positive'
+    } else if (Number.isFinite(selectedCapacity) && selectedCapacity > 0 && attendees > selectedCapacity) {
+      nextErrors.expectedAttendees = `Expected attendees cannot exceed capacity (${selectedCapacity})`
+    }
+
+    setBookingErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
+  const submitBookingRequest = async (event) => {
+    event.preventDefault()
+    if (!bookingTarget) return
+    if (!validateBookingForm()) return
+
+    const payload = {
+      resourceId: bookingTarget.id,
+      bookingDate: bookingForm.bookingDate,
+      startTime: bookingForm.startTime,
+      endTime: getEndTimeForStart(bookingForm.startTime),
+      purpose: bookingForm.purpose.trim(),
+      expectedAttendees: Number(bookingForm.expectedAttendees),
+    }
+
+    setBookingSubmitting(true)
+    try {
+      const createdBooking = await bookingApi.requestBooking(payload)
+      await refetchMyBookings()
+      closeBookingModal()
+      navigate('/my-bookings', {
+        state: {
+          bookingFeedback: {
+            kind: 'success',
+            message: `${bookingTarget.name} booking request submitted. Status: ${createdBooking?.status || 'PENDING'}.`,
+          },
+        },
+      })
+    } catch (err) {
+      notify('error', normalizeErrorMessage(err, 'Could not complete booking request.'))
+    } finally {
+      setBookingSubmitting(false)
     }
   }
 
@@ -201,14 +281,7 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
       return
     }
 
-    try {
-      const payload = buildQuickBookingPayload(resource)
-      await bookingApi.requestBooking(payload)
-      await refetchMyBookings()
-      notify('success', `${resource.name} booking request submitted. Status: PENDING.`)
-    } catch (err) {
-      notify('error', normalizeErrorMessage(err, 'Could not complete booking request.'))
-    }
+    openBookingModal(resource)
   }
 
   return (
@@ -340,6 +413,100 @@ export default function ResourceCataloguePage({ managementEnabled = false }) {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={handleDeleteConfirm}
       />
+
+      {bookingTarget && (
+        <div className="resource-modal-backdrop" role="dialog" aria-modal="true">
+          <div className="resource-modal card booking-request-modal">
+            <div className="resource-modal-header">
+              <div>
+                <h3>Request Booking</h3>
+                <p className="muted">
+                  {bookingTarget.name} ({bookingTarget.location})
+                </p>
+              </div>
+              <button className="btn" type="button" onClick={closeBookingModal} disabled={bookingSubmitting}>
+                Close
+              </button>
+            </div>
+
+            <form className="booking-request-form" onSubmit={submitBookingRequest}>
+              <label>
+                <span>Date</span>
+                <input
+                  type="date"
+                  min={minBookingDate}
+                  value={bookingForm.bookingDate}
+                  onChange={(e) => setBookingField('bookingDate', e.target.value)}
+                />
+                {bookingErrors.bookingDate && <small className="form-error">{bookingErrors.bookingDate}</small>}
+              </label>
+
+              <div className="booking-request-grid">
+                <label>
+                  <span>Time Slot (2 Hours)</span>
+                  <select
+                    value={bookingForm.startTime}
+                    onChange={(e) => setBookingField('startTime', e.target.value)}
+                  >
+                    <option value="">Select a slot</option>
+                    {SLOT_OPTIONS.map((slot) => (
+                      <option key={slot.value} value={slot.value}>
+                        {slot.label}
+                      </option>
+                    ))}
+                  </select>
+                  {bookingErrors.startTime && <small className="form-error">{bookingErrors.startTime}</small>}
+                </label>
+
+                <label>
+                  <span>End Time</span>
+                  <input
+                    type="time"
+                    value={getEndTimeForStart(bookingForm.startTime)}
+                    readOnly
+                  />
+                  <small className="muted">Auto-generated to match a fixed 2-hour slot.</small>
+                </label>
+
+                <label>
+                  <span>Expected Attendees</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={bookingTarget.capacity || undefined}
+                    value={bookingForm.expectedAttendees}
+                    onChange={(e) => setBookingField('expectedAttendees', e.target.value)}
+                  />
+                  {bookingErrors.expectedAttendees && (
+                    <small className="form-error">{bookingErrors.expectedAttendees}</small>
+                  )}
+                </label>
+              </div>
+
+              <label>
+                <span>Purpose</span>
+                <textarea
+                  rows="4"
+                  maxLength={500}
+                  value={bookingForm.purpose}
+                  onChange={(e) => setBookingField('purpose', e.target.value)}
+                  placeholder="Describe why you need this resource"
+                />
+                {bookingErrors.purpose && <small className="form-error">{bookingErrors.purpose}</small>}
+              </label>
+
+              <div className="resource-modal-footer">
+                <button className="btn" type="button" onClick={closeBookingModal} disabled={bookingSubmitting}>
+                  Cancel
+                </button>
+                <button className="btn primary" type="submit" disabled={bookingSubmitting}>
+                  {bookingSubmitting ? 'Submitting...' : 'Submit Booking Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
