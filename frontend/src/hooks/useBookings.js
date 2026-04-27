@@ -11,10 +11,11 @@ export function useBookings() {
 
 }
 
-export const useMyBookings = () =>
+export const useMyBookings = (enabled = true) =>
   useQuery({
     queryKey: ['my-bookings'],
     queryFn: bookingApi.getMyBookings,
+    enabled,
     staleTime: 10000,
     retry: (failureCount, error) => {
       const status = error?.response?.status

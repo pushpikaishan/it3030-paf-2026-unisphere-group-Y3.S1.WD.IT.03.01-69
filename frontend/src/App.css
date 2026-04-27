@@ -937,13 +937,25 @@ code {
 }
 
 .admin-notify-tab {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  height: 56px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #dbe7f5;
   border-radius: 12px;
-  padding: 12px 14px;
+  padding: 0 14px;
   background: #f8fbff;
   color: #053769;
   font-weight: 800;
   cursor: pointer;
+}
+
+.admin-notify-tab:active {
+  transform: none;
 }
 
 .admin-notify-tab.active {
@@ -960,4 +972,21 @@ code {
   font-size: 13px;
   font-weight: 700;
   color: #053769;
+}
+
+.admin-notify-subline {
+  min-height: 24px;
+}
+
+.admin-notify-header-card {
+  height: 220px;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  overflow: auto;
+}
+
+.admin-notify-header-card h2,
+.admin-notify-header-card p {
+  margin: 0;
 }

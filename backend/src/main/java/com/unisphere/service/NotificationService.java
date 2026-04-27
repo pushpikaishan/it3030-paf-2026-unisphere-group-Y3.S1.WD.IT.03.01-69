@@ -27,7 +27,12 @@ public class NotificationService {
 
     public List<Notification> findByUserId(@NonNull Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return notificationRepository.findByUser(user);
+        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
+    }
+
+    public List<Notification> findByUserEmail(@NonNull String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
     }
 
     public Notification findById(@NonNull Long id) {

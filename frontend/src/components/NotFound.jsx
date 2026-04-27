@@ -7,6 +7,11 @@ export default function NotFound404() {
 
   useEffect(() => {
     setIsLoaded(true);
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     
     const handleMouseMove = (e) => {
       setMousePosition({
@@ -16,7 +21,11 @@ export default function NotFound404() {
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
   }, []);
 
   return (
@@ -72,22 +81,6 @@ export default function NotFound404() {
             Let's get you back on track.
           </p>
 
-          {/* Status Badge */}
-          <div className="status-badge">
-            <span className="status-dot"></span>
-            <span className="status-text">Error 404 - Page Not Found</span>
-          </div>
-
-          <div className="cta-buttons">
-            <a href="/" className="btn btn-primary">
-              <span>← Back to Home</span>
-            </a>
-            
-            <a href="/contact" className="btn btn-secondary">
-              <span>Contact Support →</span>
-            </a>
-          </div>
-
           {/* Breadcrumb */}
           <div className="breadcrumb">
             <span className="crumb">Home</span>
@@ -112,6 +105,7 @@ export default function NotFound404() {
           --text-gray: #6b7280;
           
           width: 100%;
+          height: 100dvh;
           min-height: 100vh;
           display: flex;
           align-items: center;
@@ -155,12 +149,12 @@ export default function NotFound404() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          max-width: 900px;
+          max-width: 760px;
           width: 100%;
-          padding: 60px 40px;
+          padding: 34px 24px;
           z-index: 10;
           position: relative;
-          gap: 50px;
+          gap: 28px;
         }
 
         /* Image Section */
@@ -186,8 +180,8 @@ export default function NotFound404() {
 
         .image-frame {
           position: relative;
-          width: 280px;
-          height: 280px;
+          width: 210px;
+          height: 210px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -214,8 +208,8 @@ export default function NotFound404() {
 
         .glow-ring-orange {
           position: absolute;
-          width: 320px;
-          height: 320px;
+          width: 248px;
+          height: 248px;
           border: 2px solid var(--primary-orange);
           border-radius: 50%;
           top: 50%;
@@ -228,8 +222,8 @@ export default function NotFound404() {
 
         .glow-ring-blue {
           position: absolute;
-          width: 360px;
-          height: 360px;
+          width: 286px;
+          height: 286px;
           border: 1.5px dashed var(--primary-blue);
           border-radius: 50%;
           top: 50%;
@@ -302,10 +296,10 @@ export default function NotFound404() {
           flex-direction: column;
           align-items: center;
           text-align: center;
-          gap: 25px;
+          gap: 16px;
           opacity: 0;
           animation: fadeInUp 0.8s ease-out 0.3s forwards;
-          max-width: 700px;
+          max-width: 560px;
         }
 
         @keyframes fadeInUp {
@@ -324,9 +318,9 @@ export default function NotFound404() {
           gap: 0;
           align-items: center;
           justify-content: center;
-          font-size: 140px;
+          font-size: 108px;
           font-weight: 900;
-          letter-spacing: -8px;
+          letter-spacing: -5px;
           line-height: 1;
           animation: codeReveal 0.8s ease-out 0.4s both;
         }
@@ -360,21 +354,21 @@ export default function NotFound404() {
         }
 
         .error-title {
-          font-size: 52px;
+          font-size: 40px;
           font-weight: 700;
           color: var(--text-dark);
           letter-spacing: -0.5px;
           line-height: 1.2;
           animation: fadeInUp 0.8s ease-out 0.5s both;
-          margin: 20px 0;
+          margin: 8px 0;
         }
 
         .error-description {
-          font-size: 18px;
+          font-size: 16px;
           color: var(--text-gray);
-          line-height: 1.7;
+          line-height: 1.55;
           animation: fadeInUp 0.8s ease-out 0.6s both;
-          max-width: 600px;
+          max-width: 500px;
         }
 
         /* Status Badge */
@@ -494,9 +488,9 @@ export default function NotFound404() {
           align-items: center;
           justify-content: center;
           gap: 12px;
-          margin-top: 30px;
+          margin-top: 8px;
           animation: fadeInUp 0.8s ease-out 0.75s both;
-          padding-top: 20px;
+          padding-top: 12px;
           border-top: 1px solid rgba(5, 55, 105, 0.1);
         }
 
@@ -524,61 +518,21 @@ export default function NotFound404() {
         /* Responsive Design */
         @media (max-width: 768px) {
           .content-wrapper {
-            gap: 40px;
-            padding: 40px 25px;
+            gap: 22px;
+            padding: 26px 18px;
           }
 
           .error-code {
-            font-size: 100px;
-            letter-spacing: -5px;
+            font-size: 82px;
+            letter-spacing: -4px;
           }
 
           .error-title {
-            font-size: 38px;
+            font-size: 32px;
           }
 
           .error-description {
-            font-size: 16px;
-          }
-
-          .image-frame {
-            width: 220px;
-            height: 220px;
-          }
-
-          .cta-buttons {
-            flex-direction: column;
-            width: 100%;
-          }
-
-          .btn {
-            width: 100%;
-            justify-content: center;
-          }
-
-          .glow-ring-orange {
-            width: 260px;
-            height: 260px;
-          }
-
-          .glow-ring-blue {
-            width: 300px;
-            height: 300px;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .error-code {
-            font-size: 70px;
-            letter-spacing: -3px;
-          }
-
-          .error-title {
-            font-size: 28px;
-          }
-
-          .error-description {
-            font-size: 14px;
+            font-size: 15px;
           }
 
           .image-frame {
@@ -586,9 +540,34 @@ export default function NotFound404() {
             height: 180px;
           }
 
-          .status-badge {
-            font-size: 12px;
-            padding: 8px 16px;
+          .glow-ring-orange {
+            width: 212px;
+            height: 212px;
+          }
+
+          .glow-ring-blue {
+            width: 242px;
+            height: 242px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .error-code {
+            font-size: 60px;
+            letter-spacing: -3px;
+          }
+
+          .error-title {
+            font-size: 24px;
+          }
+
+          .error-description {
+            font-size: 14px;
+          }
+
+          .image-frame {
+            width: 150px;
+            height: 150px;
           }
         }
       `}</style>

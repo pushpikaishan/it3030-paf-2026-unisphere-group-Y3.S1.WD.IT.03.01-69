@@ -3,6 +3,7 @@ package com.unisphere.service;
 import com.unisphere.entity.Announcement;
 import com.unisphere.entity.AnnouncementTargetRole;
 import com.unisphere.repository.AnnouncementRepository;
+import jakarta.persistence.EntityNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,6 +54,16 @@ public class AnnouncementService {
         }
 
         return announcementRepository.save(announcement);
+    }
+
+    public void delete(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Announcement id is required");
+        }
+        if (!announcementRepository.existsById(id)) {
+            throw new EntityNotFoundException("Announcement not found: " + id);
+        }
+        announcementRepository.deleteById(id);
     }
 
     private String resolveTitle(String title, AnnouncementTargetRole targetRole) {

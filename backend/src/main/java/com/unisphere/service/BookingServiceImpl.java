@@ -63,6 +63,11 @@ public class BookingServiceImpl implements BookingService {
             .build();
 
         Booking saved = bookingRepository.save(Objects.requireNonNull(booking));
+        notifyUser(
+            saved.getUser().getId(),
+            "Booking Request Submitted",
+            buildPendingMessage(saved)
+        );
         return toResponse(saved);
     }
 
@@ -264,6 +269,12 @@ public class BookingServiceImpl implements BookingService {
         return "Your booking for " + booking.getResource().getName()
             + " on " + booking.getBookingDate()
             + " (" + booking.getStartTime() + " - " + booking.getEndTime() + ") was " + verb + ".";
+    }
+
+    private String buildPendingMessage(Booking booking) {
+        return "Your booking request for " + booking.getResource().getName()
+            + " on " + booking.getBookingDate()
+            + " (" + booking.getStartTime() + " - " + booking.getEndTime() + ") is pending admin approval.";
     }
 
     private BookingResponseDTO toResponse(Booking booking) {

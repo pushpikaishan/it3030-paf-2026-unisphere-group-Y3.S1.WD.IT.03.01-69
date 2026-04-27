@@ -33,7 +33,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to={user ? authedHome : '/login'} replace />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/dashboard" element={user ? <Dashboard /> : <NotFound />} />
       <Route path="/bookings" element={user ? <BookingPage /> : <Navigate to="/login" replace />} />
       <Route path="/my-bookings" element={user ? <MyBookingsPage /> : <Navigate to="/login" replace />} />
       <Route path="/resources" element={<ResourcePage />} />
@@ -42,20 +42,20 @@ export default function AppRoutes() {
       <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" replace />} />
       <Route
         path="/admin"
-        element={isPrivileged ? <Navigate to="/admin/dashboard" replace /> : <Navigate to="/dashboard" replace />}
+        element={isPrivileged ? <Navigate to="/admin/dashboard" replace /> : <NotFound />}
       />
-      <Route path="/admin/dashboard" element={isPrivileged ? <AdminDashboard /> : <Navigate to="/dashboard" replace />} />
-      <Route path="/admin/resources" element={isPrivileged ? <AdminResources /> : <Navigate to="/dashboard" replace />} />
-      <Route path="/admin/bookings" element={isPrivileged ? <AdminBookings /> : <Navigate to="/dashboard" replace />} />
-      <Route path="/admin/users" element={isPrivileged ? <AdminUsers /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/admin/dashboard" element={isPrivileged ? <AdminDashboard /> : <NotFound />} />
+      <Route path="/admin/resources" element={isPrivileged ? <AdminResources /> : <NotFound />} />
+      <Route path="/admin/bookings" element={isPrivileged ? <AdminBookings /> : <NotFound />} />
+      <Route path="/admin/users" element={isPrivileged ? <AdminUsers /> : <NotFound />} />
       <Route
         path="/admin/notifications"
-        element={isPrivileged ? <AdminNotifications /> : <Navigate to="/dashboard" replace />}
+        element={isPrivileged ? <AdminNotifications /> : <NotFound />}
       />
-      <Route path="/admin/profile" element={isPrivileged ? <AdminProfile /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/admin/profile" element={isPrivileged ? <AdminProfile /> : <NotFound />} />
       <Route
         path="/admin/manager-area"
-        element={isManager ? <ManagerArea /> : <Navigate to="/dashboard" replace />}
+        element={isManager ? <ManagerArea /> : <NotFound />}
       />
       <Route path="/login" element={user ? <Navigate to={authedHome} replace /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to={authedHome} replace /> : <Register />} />
