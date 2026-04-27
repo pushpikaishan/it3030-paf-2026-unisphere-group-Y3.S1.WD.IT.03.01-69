@@ -3,8 +3,11 @@ package com.unisphere.service;
 import com.unisphere.entity.AuthProvider;
 import com.unisphere.entity.Role;
 import com.unisphere.entity.User;
+import com.unisphere.entity.UserStatus;
 import com.unisphere.repository.UserRepository;
 import java.util.List;
+import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +28,7 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User findById(Long id) {
+    public User findById(@NonNull Long id) {
         return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
@@ -33,11 +36,17 @@ public class UserService {
         if (user.getProvider() == null) {
             user.setProvider(AuthProvider.LOCAL);
         }
+        if (user.getRole() == null) {
+            user.setRole(Role.USER);
+        }
         if (user.getProvider() == AuthProvider.LOCAL && (user.getPassword() == null || user.getPassword().isBlank())) {
             throw new IllegalArgumentException("Password is required for local users");
         }
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
+        }
+        if (user.getStatus() == null) {
+            user.setStatus(UserStatus.APPROVED);
         }
         if (user.getPassword() != null && !user.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -45,37 +54,90 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User update(Long id, User update) {
+    public User update(@NonNull Long id, User update) {
         User existing = findById(id);
         existing.setName(update.getName());
         existing.setEmail(update.getEmail());
         existing.setProfileImage(update.getProfileImage());
         existing.setRole(update.getRole() != null ? update.getRole() : existing.getRole());
+        existing.setStatus(update.getStatus() != null ? update.getStatus() : existing.getStatus());
         if (update.getPassword() != null && !update.getPassword().isBlank()) {
             existing.setPassword(passwordEncoder.encode(update.getPassword()));
         }
         return userRepository.save(existing);
     }
 
-    public void delete(Long id) {
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    public void delete(@NonNull Long id) {
         userRepository.deleteById(id);
     }
 
-    public User upsertOAuthUser(String name, String email, String pictureUrl) {
+    public User upsertOAuthUser(String googleId, String name, String email, String pictureUrl, Role desiredRole, UserStatus desiredStatus) {
+        Role targetRole = desiredRole != null ? desiredRole : Role.USER;
+        UserStatus targetStatus;
+        if (desiredStatus != null) {
+            targetStatus = desiredStatus;
+        } else if (targetRole == Role.TECHNICIAN) {
+            targetStatus = UserStatus.PENDING;
+        } else {
+            targetStatus = UserStatus.APPROVED;
+        }
+
         return userRepository
             .findByEmail(email)
             .map(existing -> {
                 existing.setName(name);
                 existing.setProfileImage(pictureUrl);
+                if (googleId != null && !googleId.isBlank()) {
+                    existing.setGoogleId(googleId);
+                }
+                existing.setProvider(AuthProvider.GOOGLE);
+                // Preserve existing role/status unless an explicit desired role/status was provided
+                if (desiredRole != null) {
+                    existing.setRole(targetRole);
+                }
+                if (desiredStatus != null) {
+                    existing.setStatus(targetStatus);
+                }
+                // If existing has no role/status, backfill sensible defaults
+                if (existing.getRole() == null) {
+                    existing.setRole(targetRole);
+                }
+                if (existing.getStatus() == null) {
+                    existing.setStatus(targetStatus);
+                }
                 return userRepository.save(existing);
             })
             .orElseGet(() -> {
                 User user = new User();
+                user.setGoogleId(googleId);
                 user.setName(name);
                 user.setEmail(email);
                 user.setProfileImage(pictureUrl);
-                user.setRole(Role.USER);
+                user.setRole(targetRole);
+                user.setProvider(AuthProvider.GOOGLE);
+                user.setStatus(targetStatus);
                 return userRepository.save(user);
             });
+    }
+
+    public List<User> findPendingTechnicians() {
+        return userRepository.findByRoleAndStatus(Role.TECHNICIAN, UserStatus.PENDING);
+    }
+
+    public User updateStatus(@NonNull Long id, UserStatus status) {
+        User existing = findById(id);
+        existing.setStatus(status);
+        return userRepository.save(existing);
+    }
+
+    public User updateProfileImage(@NonNull Long id, String profileImage) {
+        User existing = findById(id);
+        existing.setProfileImage(profileImage);
+        return userRepository.save(existing);
+    }
+
+    public User disable(@NonNull Long id) {
+        return updateStatus(id, UserStatus.DISABLED);
     }
 }
