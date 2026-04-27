@@ -6,6 +6,7 @@ import com.unisphere.entity.User;
 import com.unisphere.entity.UserStatus;
 import com.unisphere.repository.UserRepository;
 import java.util.List;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User findById(Long id) {
+    public User findById(@NonNull Long id) {
         return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 
@@ -53,7 +54,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User update(Long id, User update) {
+    public User update(@NonNull Long id, User update) {
         User existing = findById(id);
         existing.setName(update.getName());
         existing.setEmail(update.getEmail());
@@ -67,7 +68,7 @@ public class UserService {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public void delete(Long id) {
+    public void delete(@NonNull Long id) {
         userRepository.deleteById(id);
     }
 
@@ -124,19 +125,19 @@ public class UserService {
         return userRepository.findByRoleAndStatus(Role.TECHNICIAN, UserStatus.PENDING);
     }
 
-    public User updateStatus(Long id, UserStatus status) {
+    public User updateStatus(@NonNull Long id, UserStatus status) {
         User existing = findById(id);
         existing.setStatus(status);
         return userRepository.save(existing);
     }
 
-    public User updateProfileImage(Long id, String profileImage) {
+    public User updateProfileImage(@NonNull Long id, String profileImage) {
         User existing = findById(id);
         existing.setProfileImage(profileImage);
         return userRepository.save(existing);
     }
 
-    public User disable(Long id) {
+    public User disable(@NonNull Long id) {
         return updateStatus(id, UserStatus.DISABLED);
     }
 }

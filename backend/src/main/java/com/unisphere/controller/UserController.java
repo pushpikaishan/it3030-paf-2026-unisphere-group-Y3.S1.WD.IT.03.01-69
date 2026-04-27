@@ -2,9 +2,11 @@ package com.unisphere.controller;
 
 import com.unisphere.entity.User;
 import com.unisphere.service.UserService;
+import com.unisphere.service.TwoFactorService;
 import com.unisphere.entity.UserStatus;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,9 +33,11 @@ import org.springframework.util.StringUtils;
 public class UserController {
 
     private final UserService userService;
+    private final TwoFactorService twoFactorService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, TwoFactorService twoFactorService) {
         this.userService = userService;
+        this.twoFactorService = twoFactorService;
     }
 
     @GetMapping
@@ -57,7 +61,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody User user, Authentication authentication) {
+    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody User user, Authentication authentication,
+        @org.springframework.web.bind.annotation.RequestHeader(value = "X-2FA-Token", required = false) String twoFactorToken) {
         boolean isPrivileged = authentication.getAuthorities().stream()
             .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_MANAGER"));
 
@@ -80,6 +85,14 @@ public class UserController {
             // Prevent self-service escalation
             user.setRole(null);
             user.setStatus(null);
+
+            boolean wantsPasswordChange = user.getPassword() != null && !user.getPassword().isBlank();
+            if (wantsPasswordChange && existing != null && twoFactorService.hasAnyTwoFactorEnabled(existing)) {
+                boolean valid = twoFactorService.consumeVerifiedActionToken(twoFactorToken, existing.getId(), "CHANGE_PASSWORD");
+                if (!valid) {
+                    return ResponseEntity.status(403).body(Map.of("message", "Two-factor verification required for password change"));
+                }
+            }
         }
 
         return ResponseEntity.ok(userService.update(id, user));
@@ -134,7 +147,8 @@ public class UserController {
     }
 
     @PostMapping("/{id}/disable")
-    public ResponseEntity<?> disable(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<?> disable(@PathVariable Long id, Authentication authentication,
+        @org.springframework.web.bind.annotation.RequestHeader(value = "X-2FA-Token", required = false) String twoFactorToken) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).body(Map.of("message", "Unauthorized"));
         }
@@ -158,9 +172,17 @@ public class UserController {
             if (!sameUserById && !sameUserByEmail) {
                 return ResponseEntity.status(403).body(Map.of("message", "Only admins can disable other accounts"));
             }
+
+            if ((sameUserById || sameUserByEmail) && existing != null && twoFactorService.hasAnyTwoFactorEnabled(existing)) {
+                boolean valid = twoFactorService.consumeVerifiedActionToken(twoFactorToken, existing.getId(), "DELETE_ACCOUNT");
+                if (!valid) {
+                    return ResponseEntity.status(403).body(Map.of("message", "Two-factor verification required for account delete"));
+                }
+            }
         }
 
-        User updated = userService.disable(existing.getId());
+        Long existingUserId = Objects.requireNonNull(existing.getId(), "User id is required");
+        User updated = userService.disable(existingUserId);
         return ResponseEntity.ok(Map.of(
             "message", "Account temporarily disabled. It will be deleted permanently in 1 month.",
             "user", updated

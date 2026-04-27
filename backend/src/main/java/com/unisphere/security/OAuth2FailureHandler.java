@@ -1,7 +1,7 @@
 package com.unisphere.security;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
@@ -21,10 +21,12 @@ public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler 
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception)
         throws IOException, ServletException {
 
-        String redirectUrl = UriComponentsBuilder.fromUriString(frontendRedirectUri)
+        String redirectUri = Objects.requireNonNull(frontendRedirectUri, "Frontend redirect URI is required");
+
+        String redirectUrl = UriComponentsBuilder.fromUriString(redirectUri)
             .queryParam("error", "google_login_failed")
             .build()
-            .encode(StandardCharsets.UTF_8)
+            .encode()
             .toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);

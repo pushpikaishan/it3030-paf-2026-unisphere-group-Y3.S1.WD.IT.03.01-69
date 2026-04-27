@@ -34,7 +34,7 @@ export default function Sidebar() {
         </div>
       </NavLink>
 
-      {[...managerOnlyNav, ...adminNav].map((link) => (
+      {[...managerOnlyNav, ...adminNav].map((link) =>  (
         <NavLink key={link.to} to={link.to}>
           {link.label}
         </NavLink>

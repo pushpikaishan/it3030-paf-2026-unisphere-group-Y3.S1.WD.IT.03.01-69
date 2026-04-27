@@ -1,6 +1,7 @@
 package com.unisphere.controller;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.Map;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -88,15 +89,16 @@ public class MeController {
             status = dbUser.getStatus() != null ? dbUser.getStatus().name() : status;
         }
 
-        return ResponseEntity.ok(Map.of(
-            "authenticated", authentication.isAuthenticated(),
-            "id", id,
-            "name", name,
-            "email", email,
-            "role", role,
-            "picture", picture,
-            "status", status,
-            "authorities", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList()
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("authenticated", authentication.isAuthenticated());
+        response.put("id", id);
+        response.put("name", name);
+        response.put("email", email);
+        response.put("role", role);
+        response.put("picture", picture);
+        response.put("status", status);
+        response.put("authorities", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
+
+        return ResponseEntity.ok(response);
     }
 }

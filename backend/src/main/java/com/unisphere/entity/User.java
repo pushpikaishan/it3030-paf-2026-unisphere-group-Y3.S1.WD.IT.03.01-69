@@ -42,6 +42,27 @@ public class User {
     @Column(name = "google_id", unique = true)
     private String googleId;
 
+    @Column(name = "email_two_factor_enabled", nullable = false)
+    private boolean emailTwoFactorEnabled = false;
+
+    @Column(name = "app_two_factor_enabled", nullable = false)
+    private boolean appTwoFactorEnabled = false;
+
+    @Column(name = "email_otp_code", length = 10)
+    private String emailOtpCode;
+
+    @Column(name = "email_otp_expires_at")
+    private LocalDateTime emailOtpExpiresAt;
+
+    @Column(name = "app_two_factor_secret", length = 128)
+    private String appTwoFactorSecret;
+
+    @Column(name = "app_two_factor_pending_secret", length = 128)
+    private String appTwoFactorPendingSecret;
+
+    @Column(name = "app_two_factor_pending_expires_at")
+    private LocalDateTime appTwoFactorPendingExpiresAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status = UserStatus.PENDING;
@@ -129,5 +150,61 @@ public class User {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public boolean isEmailTwoFactorEnabled() {
+        return emailTwoFactorEnabled;
+    }
+
+    public void setEmailTwoFactorEnabled(boolean emailTwoFactorEnabled) {
+        this.emailTwoFactorEnabled = emailTwoFactorEnabled;
+    }
+
+    public boolean isAppTwoFactorEnabled() {
+        return appTwoFactorEnabled;
+    }
+
+    public void setAppTwoFactorEnabled(boolean appTwoFactorEnabled) {
+        this.appTwoFactorEnabled = appTwoFactorEnabled;
+    }
+
+    public String getEmailOtpCode() {
+        return emailOtpCode;
+    }
+
+    public void setEmailOtpCode(String emailOtpCode) {
+        this.emailOtpCode = emailOtpCode;
+    }
+
+    public LocalDateTime getEmailOtpExpiresAt() {
+        return emailOtpExpiresAt;
+    }
+
+    public void setEmailOtpExpiresAt(LocalDateTime emailOtpExpiresAt) {
+        this.emailOtpExpiresAt = emailOtpExpiresAt;
+    }
+
+    public String getAppTwoFactorSecret() {
+        return appTwoFactorSecret;
+    }
+
+    public void setAppTwoFactorSecret(String appTwoFactorSecret) {
+        this.appTwoFactorSecret = appTwoFactorSecret;
+    }
+
+    public String getAppTwoFactorPendingSecret() {
+        return appTwoFactorPendingSecret;
+    }
+
+    public void setAppTwoFactorPendingSecret(String appTwoFactorPendingSecret) {
+        this.appTwoFactorPendingSecret = appTwoFactorPendingSecret;
+    }
+
+    public LocalDateTime getAppTwoFactorPendingExpiresAt() {
+        return appTwoFactorPendingExpiresAt;
+    }
+
+    public void setAppTwoFactorPendingExpiresAt(LocalDateTime appTwoFactorPendingExpiresAt) {
+        this.appTwoFactorPendingExpiresAt = appTwoFactorPendingExpiresAt;
     }
 }
