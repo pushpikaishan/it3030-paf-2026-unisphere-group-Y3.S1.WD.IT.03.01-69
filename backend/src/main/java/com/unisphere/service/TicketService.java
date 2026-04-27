@@ -254,7 +254,8 @@ public class TicketService {
             return anyFallback.getId();
         }
 
-        throw new IllegalArgumentException("No resources available to assign. Please create a resource first.");
+        // Allow tickets without a linked resource when catalog is empty.
+        return null;
     }
 
     private void validateStatusTransition(IncidentTicket ticket, TicketStatus target, User actor, UpdateStatusRequest request) {
