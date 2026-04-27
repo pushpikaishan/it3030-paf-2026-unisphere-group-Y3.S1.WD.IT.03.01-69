@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.AccessDeniedException;
@@ -84,7 +85,7 @@ public class BookingServiceImpl implements BookingService {
     public Page<BookingResponseDTO> getAllBookings(BookingStatus status, Long resourceId, LocalDate bookingDate, int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = Math.min(Math.max(size, 1), 100);
-        Pageable pageable = PageRequest.of(safePage, safeSize);
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "id"));
 
         Specification<Booking> specification = (root, query, cb) -> cb.conjunction();
 

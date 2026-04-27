@@ -29,6 +29,8 @@ export const useAdminBookings = (params) =>
     queryKey: ['admin-bookings', params],
     queryFn: () => bookingApi.getBookings(params),
     staleTime: 10000,
+    refetchInterval: 8000,
+    refetchIntervalInBackground: true,
     retry: (failureCount, error) => {
       const status = error?.response?.status
       if (status === 401 || status === 403) return false

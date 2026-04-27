@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import BookingCard from '../../components/BookingCard'
 import BookingDecisionModal from '../../components/BookingDecisionModal'
 import BookingFilters from '../../components/BookingFilters'
+import BookingStatusBadge from '../../components/BookingStatusBadge'
 import {
   useAdminBookings,
   useApproveBooking,
@@ -30,7 +31,6 @@ const getErrorMessage = (error, fallback) => {
 
 export default function AdminBookings() {
   const [filters, setFilters] = useState(initialFilters)
-  const [page, setPage] = useState(0)
   const [rejectTarget, setRejectTarget] = useState(null)
   const [feedback, setFeedback] = useState(null)
   const [busyAction, setBusyAction] = useState(null)
@@ -39,11 +39,20 @@ export default function AdminBookings() {
     status: filters.status || undefined,
     resourceId: filters.resourceId || undefined,
     date: filters.date || undefined,
-    page,
+    page: 0,
     size: 10,
   }
 
-  const { data, isLoading, isError, error, refetch } = useAdminBookings(queryParams)
+  const recentQueryParams = {
+    status: undefined,
+    resourceId: filters.resourceId || undefined,
+    date: filters.date || undefined,
+    page: 0,
+    size: 40,
+  }
+
+  const { data, isLoading, isFetching, isError, error, refetch } = useAdminBookings(queryParams)
+  const { data: recentData } = useAdminBookings(recentQueryParams)
   const { data: resourcesData } = useResources({ page: 0, size: 200 })
 
   const approveMutation = useApproveBooking()
@@ -51,16 +60,25 @@ export default function AdminBookings() {
   const cancelMutation = useCancelBooking()
 
   const bookings = data?.content || []
-  const totalPages = data?.totalPages || 1
+  const recentDecisions = useMemo(
+    () =>
+      (recentData?.content || [])
+        .filter((item) => item?.status && item.status !== 'PENDING')
+        .sort((a, b) => {
+          const aTime = new Date(a?.updatedAt || a?.createdAt || 0).getTime()
+          const bTime = new Date(b?.updatedAt || b?.createdAt || 0).getTime()
+          return bTime - aTime
+        })
+        .slice(0, 8),
+    [recentData?.content],
+  )
 
   const onFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }))
-    setPage(0)
   }
 
   const resetFilters = () => {
     setFilters(initialFilters)
-    setPage(0)
   }
 
   const withAction = async (actionId, action, successMessage, fallbackError) => {
@@ -73,12 +91,20 @@ export default function AdminBookings() {
     } catch (err) {
       if (err?.response?.status === 404) {
         await refetch()
+        setFeedback({ kind: 'success', message: 'This booking was already processed. List refreshed.' })
+        return
       }
       setFeedback({ kind: 'error', message: getErrorMessage(err, fallbackError) })
     } finally {
       setBusyAction(null)
     }
   }
+
+  useEffect(() => {
+    if (!feedback) return
+    const timer = setTimeout(() => setFeedback(null), 3500)
+    return () => clearTimeout(timer)
+  }, [feedback])
 
   const resolveBookingId = (booking) => {
     const parsed = Number(booking?.id)
@@ -144,8 +170,15 @@ export default function AdminBookings() {
 
       <div className="booking-list-wrap">
         <div className="card bookings-header">
-          <h2>Booking Management</h2>
-          <p className="muted">Review booking requests and make approval decisions.</p>
+          <div className="booking-header-row">
+            <div>
+              <h2>Booking Management</h2>
+              <p className="muted">Review booking requests and make approval decisions.</p>
+            </div>
+            <button type="button" className="btn" onClick={() => refetch()} disabled={isFetching}>
+              {isFetching ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
         </div>
 
         {feedback && <div className={`resource-toast ${feedback.kind}`}>{feedback.message}</div>}
@@ -191,21 +224,30 @@ export default function AdminBookings() {
               ))}
             </div>
 
-            <div className="card booking-pagination">
-              <button type="button" className="btn" disabled={page <= 0} onClick={() => setPage((prev) => prev - 1)}>
-                Previous
-              </button>
-              <span>
-                Page {Math.min(page + 1, totalPages)} of {totalPages}
-              </span>
-              <button
-                type="button"
-                className="btn"
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((prev) => prev + 1)}
-              >
-                Next
-              </button>
+            <div className="card booking-compact-list">
+              <div className="booking-compact-head">
+                <h3>Recent Decisions</h3>
+                <p className="muted">Compact view of approved, rejected, and cancelled requests.</p>
+              </div>
+              {recentDecisions.length === 0 ? (
+                <p className="muted">No approved/rejected/cancelled bookings yet.</p>
+              ) : (
+                <div className="booking-compact-rows">
+                  {recentDecisions.map((item) => (
+                    <div key={`compact-${item.id}`} className="booking-compact-row">
+                      <div className="booking-compact-main">
+                        <strong>{item.resourceName || 'Unknown Resource'}</strong>
+                        <span>
+                          {item.bookingDate} | {String(item.startTime || '--:--').slice(0, 5)} -{' '}
+                          {String(item.endTime || '--:--').slice(0, 5)}
+                        </span>
+                      </div>
+                      <div className="booking-compact-user">{item.userName || item.userEmail || 'Unknown user'}</div>
+                      <BookingStatusBadge status={item.status} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
