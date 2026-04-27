@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import MyTicketsPanel from '../components/MyTicketsPanel'
 import { userService } from '../services/userService'
-import './css/profile.css'
+import './css/Profile.css'
 
 export default function Profile() {
   const { user, logout, refresh } = useAuth()
@@ -169,6 +169,10 @@ export default function Profile() {
           >
             My Tickets
           </button>
+
+          <button type="button" className="btn btn-danger profile-side-logout" onClick={handleLogout}>
+            Log Out
+          </button>
         </aside>
 
         <div className="profile-tab-content">
@@ -292,9 +296,6 @@ export default function Profile() {
                 </button>
                 <button className="btn btn-secondary" onClick={handleDelete} disabled={saving}>
                   Delete Account
-                </button>
-                <button className="btn btn-danger" onClick={handleLogout}>
-                  Log Out
                 </button>
               </div>
             </div>
