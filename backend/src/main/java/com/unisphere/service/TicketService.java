@@ -10,6 +10,7 @@ import com.unisphere.entity.TicketStatus;
 import com.unisphere.entity.User;
 import com.unisphere.entity.UserStatus;
 import com.unisphere.repository.IncidentTicketRepository;
+import com.unisphere.repository.ResourceRepository;
 import com.unisphere.repository.TicketAttachmentRepository;
 import com.unisphere.repository.TicketCommentRepository;
 import com.unisphere.repository.UserRepository;
@@ -35,17 +36,20 @@ public class TicketService {
     private static final long MAX_IMAGE_SIZE_BYTES = 5L * 1024L * 1024L;
 
     private final IncidentTicketRepository ticketRepository;
+    private final ResourceRepository resourceRepository;
     private final TicketAttachmentRepository attachmentRepository;
     private final TicketCommentRepository commentRepository;
     private final UserRepository userRepository;
 
     public TicketService(
         IncidentTicketRepository ticketRepository,
+        ResourceRepository resourceRepository,
         TicketAttachmentRepository attachmentRepository,
         TicketCommentRepository commentRepository,
         UserRepository userRepository
     ) {
         this.ticketRepository = ticketRepository;
+        this.resourceRepository = resourceRepository;
         this.attachmentRepository = attachmentRepository;
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
@@ -221,6 +225,10 @@ public class TicketService {
         boolean hasLocation = StringUtils.hasText(request.location());
         if (!hasResourceId && !hasLocation) {
             throw new IllegalArgumentException("Provide at least resourceId or location");
+        }
+
+        if (hasResourceId && !resourceRepository.existsById(request.resourceId())) {
+            throw new IllegalArgumentException("Resource not found for the provided resource ID");
         }
     }
 

@@ -17,6 +17,7 @@ import { useAuth } from '../hooks/useAuth'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import AdminResources from '../pages/admin/AdminResources'
 import AdminBookings from '../pages/admin/AdminBookings'
+import AdminTickets from '../pages/admin/AdminTickets'
 import AdminUsers from '../pages/admin/AdminUsers'
 import AdminNotifications from '../pages/admin/AdminNotifications'
 import AdminProfile from '../pages/admin/AdminProfile'
@@ -47,6 +48,7 @@ export default function AppRoutes() {
       <Route path="/admin/dashboard" element={isPrivileged ? <AdminDashboard /> : <NotFound />} />
       <Route path="/admin/resources" element={isPrivileged ? <AdminResources /> : <NotFound />} />
       <Route path="/admin/bookings" element={isPrivileged ? <AdminBookings /> : <NotFound />} />
+      <Route path="/admin/tickets" element={isPrivileged ? <AdminTickets /> : <NotFound />} />
       <Route path="/admin/users" element={isPrivileged ? <AdminUsers /> : <NotFound />} />
       <Route
         path="/admin/notifications"
