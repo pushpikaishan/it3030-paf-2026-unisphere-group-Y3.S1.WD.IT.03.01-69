@@ -18,6 +18,7 @@ export default function Profile() {
   const [status, setStatus] = useState('')
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [showPasswordFields] = useState(false)
   const [showSecurityModal, setShowSecurityModal] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showTwoFactorModal, setShowTwoFactorModal] = useState(false)
@@ -172,6 +173,8 @@ export default function Profile() {
     }
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || user?.email || 'User')}`
   }, [apiOrigin, profileImage, user?.email, user?.name])
+
+  const isAdminSideUser = user?.role === 'ADMIN' || user?.role === 'MANAGER'
 
   const notificationUserKey = useMemo(() => getNotificationUserKey(user), [user])
 
@@ -559,60 +562,32 @@ export default function Profile() {
   return (
     <div className="profile-container">
 
-      <div className="profile-shell">
-        <aside className="profile-tab-nav">
-          <button
-            type="button"
-            className={`profile-tab-btn ${activeTab === 'personal' ? 'active' : ''}`}
-            onClick={() => setActiveTab('personal')}
-          >
-            Personal Information
-          </button>
-          <button
-            type="button"
-            className={`profile-tab-btn ${activeTab === 'tickets' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tickets')}
-          >
-            My Tickets
-          </button>
-
-      <div className="profile-card">
-        <div className="profile-header">
-          <img
-            className="profile-avatar"
-            src={avatar}
-            alt="Profile avatar"
-            onClick={handleAvatarClick}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                handleAvatarClick()
-              }
-            }}
-          />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
-          <div>
-            <h2 className="profile-name">{name || user?.email || 'Profile'}</h2>
-            {email && <p className="profile-email">{email}</p>}
-          </div>
-  
-
-          <button type="button" className="btn btn-danger profile-side-logout" onClick={handleLogout}>
-            Log Out
-          </button>
-        </aside>
+      <div className={`profile-shell ${isAdminSideUser ? 'profile-shell-admin' : ''}`}>
+        {!isAdminSideUser && (
+          <aside className="profile-tab-nav">
+            <button
+              type="button"
+              className={`profile-tab-btn ${activeTab === 'personal' ? 'active' : ''}`}
+              onClick={() => setActiveTab('personal')}
+            >
+              Personal Information
+            </button>
+            <button
+              type="button"
+              className={`profile-tab-btn ${activeTab === 'tickets' ? 'active' : ''}`}
+              onClick={() => setActiveTab('tickets')}
+            >
+              My Tickets
+            </button>
+            <button type="button" className="btn btn-danger profile-side-logout" onClick={handleLogout}>
+              Log Out
+            </button>
+          </aside>
+        )}
 
 
         <div className="profile-tab-content">
-          {activeTab === 'personal' && (
+          {(isAdminSideUser || activeTab === 'personal') && (
             <div className="profile-card">
               <div className="profile-header">
                 <img
@@ -679,33 +654,6 @@ export default function Profile() {
                     </>
                   )}
 
-        {editing && (
-          <>
-            <div className="input-group">
-              <label className="input-label" htmlFor="name">Full Name</label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your full name"
-              />
-            </div>
-
-            <div className="input-group">
-              <label className="input-label" htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-              />
-            </div>
-          </>
-        )}
-
-
                   {showPasswordFields && (
                     <>
                       <div className="input-group">
@@ -718,7 +666,6 @@ export default function Profile() {
                           placeholder="Enter new password"
                         />
                       </div>
-
 
                       <div className="input-group">
                         <label className="input-label" htmlFor="confirm-password">Confirm Password</label>
@@ -741,49 +688,26 @@ export default function Profile() {
                 <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
                   {saving ? 'Saving...' : editing ? 'Save Changes' : 'Edit Profile'}
                 </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setEditing(true)
-                    setShowPasswordFields((prev) => {
-                      const next = !prev
-                      if (!next) {
-                        setNewPassword('')
-                        setConfirmPassword('')
-                      }
-                      return next
-                    })
-                    setStatus('')
-                  }}
-                >
-                  {showPasswordFields ? 'Cancel Password Change' : 'Change Password'}
+                <button className="btn btn-secondary" onClick={() => setShowSecurityModal(true)}>
+                  Security
                 </button>
                 <button className="btn btn-secondary" onClick={handleDelete} disabled={saving}>
                   Delete Account
                 </button>
+                {isAdminSideUser && (
+                  <button type="button" className="btn btn-danger profile-inline-logout" onClick={handleLogout}>
+                    Log Out
+                  </button>
+                )}
               </div>
             </div>
           )}
 
-          {activeTab === 'tickets' && (
+          {!isAdminSideUser && activeTab === 'tickets' && (
             <div className="profile-tickets-tab">
               <MyTicketsPanel />
             </div>
           )}
-
-        <div className="profile-actions">
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : editing ? 'Save Changes' : 'Edit Profile'}
-          </button>
-          <button className="btn btn-secondary" onClick={handleDelete} disabled={saving}>
-            Delete Account
-          </button>
-          <button className="btn btn-secondary" onClick={() => setShowSecurityModal(true)}>
-            Security
-          </button>
-          <button className="btn btn-danger" onClick={handleLogout}>
-            Log Out
-          </button>
 
         </div>
       </div>
@@ -804,7 +728,7 @@ export default function Profile() {
 
             <div className="security-activity">
               <span className="security-activity-label">Last Login Activity</span>
-              <span className="security-activity-value">{lastLoginText}</span>
+              <span className="security-activity-value security-activity-value-emphasis">{lastLoginText}</span>
             </div>
 
             {hasAnyTwoFactorEnabled && (

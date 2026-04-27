@@ -23,6 +23,11 @@
   display: grid;
   grid-template-columns: 270px 1fr;
   gap: 16px;
+  align-items: start;
+}
+
+.profile-shell-admin {
+  grid-template-columns: 1fr;
 }
 
 .profile-tab-nav {
@@ -33,6 +38,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  align-self: start;
+  position: sticky;
+  top: 14px;
 }
 
 .profile-tab-btn {
@@ -188,8 +196,7 @@ input[type='password']::placeholder {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 39, 74, 0.4);
-  backdrop-filter: blur(2px);
+  background: rgba(11, 39, 74, 0.46);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -199,44 +206,46 @@ input[type='password']::placeholder {
 
 .modal-card {
   position: relative;
-  background: var(--neutral-white);
-  width: min(560px, 100%);
-  border-radius: 16px;
+  background: #f8fafc;
+  width: min(620px, 100%);
+  border-radius: 14px;
   padding: 2rem;
-  border: 1px solid rgba(5, 39, 74, 0.08);
-  box-shadow: 0 24px 60px rgba(5, 39, 74, 0.28);
+  border: 1px solid #d8e3ef;
+  box-shadow: 0 16px 38px rgba(11, 39, 74, 0.2);
 }
 
 .modal-close {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  width: 28px;
-  height: 28px;
-  border: 1px solid #d1d5db;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #efbf96;
   border-radius: 50%;
-  background: #fff;
-  color: #475569;
-  font-size: 0.85rem;
+  background: #fff8f2;
+  color: #cc7e3e;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
 }
 
 .modal-close:hover {
-  border-color: var(--primary-warm);
-  color: var(--primary-warm);
+  border-color: #e4873a;
+  color: #e4873a;
 }
 
 .modal-title {
-  color: var(--primary-navy-dark);
-  font-size: 1.35rem;
+  color: var(--profile-navy);
+  font-size: 2rem;
+  font-weight: 800;
   margin-bottom: 0.5rem;
 }
 
 .modal-subtitle {
-  color: #6b7280;
-  font-size: 0.95rem;
+  color: #6d7f95;
+  font-size: 1.05rem;
+  font-weight: 500;
   margin-bottom: 1.5rem;
 }
 
@@ -247,8 +256,8 @@ input[type='password']::placeholder {
 }
 
 .security-activity {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
+  border: 1px solid #d8e3ef;
   border-radius: 12px;
   padding: 1rem;
   margin-bottom: 1.25rem;
@@ -258,17 +267,38 @@ input[type='password']::placeholder {
 }
 
 .security-activity-label {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   letter-spacing: 0.08em;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  color: var(--primary-warm);
+  color: #de8340;
 }
 
 .security-activity-value {
-  color: var(--primary-navy-dark);
-  font-weight: 600;
-  font-size: 0.95rem;
+  color: var(--profile-navy);
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+
+.security-activity-value-emphasis {
+  font-size: 1.35rem;
+  line-height: 1.35;
+}
+
+.modal-actions .btn-secondary {
+  border: 2px solid #de8340;
+  background: #ffffff;
+  color: #de8340;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 1rem;
+  font-weight: 800;
+  padding: 14px 12px;
+  border-radius: 12px;
+}
+
+.modal-actions .btn-secondary:hover:not(:disabled) {
+  background: #fff4ea;
 }
 
 .security-inline-status {
@@ -544,9 +574,13 @@ input[type='password']::placeholder {
 }
 
 .profile-side-logout {
-  margin-top: auto;
+  margin-top: 6px;
   width: 100%;
   grid-column: auto;
+}
+
+.profile-inline-logout {
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 1024px) {
@@ -558,6 +592,7 @@ input[type='password']::placeholder {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto;
+    position: static;
   }
 
   .profile-side-logout {
