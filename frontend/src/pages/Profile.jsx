@@ -2,9 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TwoFactorChallengeModal from '../components/TwoFactorChallengeModal'
 import { useAuth } from '../hooks/useAuth'
+import MyTicketsPanel from '../components/MyTicketsPanel'
 import { userService } from '../services/userService'
+
 import { addNotification, getNotificationUserKey } from '../utils/notificationSettings'
 import './css/profile.css'
+
 
 export default function Profile() {
   const { user, logout, refresh } = useAuth()
@@ -23,6 +26,8 @@ export default function Profile() {
   const [showActionTwoFactorModal, setShowActionTwoFactorModal] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+
+  const [activeTab, setActiveTab] = useState('personal')
   const [passwordStatus, setPasswordStatus] = useState('')
   const [twoFactorStatus, setTwoFactorStatus] = useState('')
   const [otpCode, setOtpCode] = useState('')
@@ -41,6 +46,7 @@ export default function Profile() {
   const [pendingTwoFactorAction, setPendingTwoFactorAction] = useState('')
   const [lastLoginText, setLastLoginText] = useState('No login activity is available yet.')
   const [twoFactorMethods, setTwoFactorMethods] = useState({ email: false, app: false })
+
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -552,6 +558,24 @@ export default function Profile() {
 
   return (
     <div className="profile-container">
+
+      <div className="profile-shell">
+        <aside className="profile-tab-nav">
+          <button
+            type="button"
+            className={`profile-tab-btn ${activeTab === 'personal' ? 'active' : ''}`}
+            onClick={() => setActiveTab('personal')}
+          >
+            Personal Information
+          </button>
+          <button
+            type="button"
+            className={`profile-tab-btn ${activeTab === 'tickets' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tickets')}
+          >
+            My Tickets
+          </button>
+
       <div className="profile-card">
         <div className="profile-header">
           <img
@@ -579,16 +603,81 @@ export default function Profile() {
             <h2 className="profile-name">{name || user?.email || 'Profile'}</h2>
             {email && <p className="profile-email">{email}</p>}
           </div>
-        </div>
+  
 
-        {user?.createdAt && (
-          <div className="profile-meta">
-            <div className="meta-item">
-              <span className="meta-label">Member Since</span>
-              <span className="meta-value">{new Date(user.createdAt).toLocaleDateString()}</span>
-            </div>
-          </div>
-        )}
+          <button type="button" className="btn btn-danger profile-side-logout" onClick={handleLogout}>
+            Log Out
+          </button>
+        </aside>
+
+
+        <div className="profile-tab-content">
+          {activeTab === 'personal' && (
+            <div className="profile-card">
+              <div className="profile-header">
+                <img
+                  className="profile-avatar"
+                  src={avatar}
+                  alt="Profile avatar"
+                  onClick={handleAvatarClick}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleAvatarClick()
+                    }
+                  }}
+                />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
+                />
+                <div>
+                  <h2 className="profile-name">{name || user?.email || 'Profile'}</h2>
+                  {user?.email && <p className="profile-email">{user.email}</p>}
+                </div>
+              </div>
+
+              {user?.createdAt && (
+                <div className="profile-meta">
+                  <div className="meta-item">
+                    <span className="meta-label">Member Since</span>
+                    <span className="meta-value">{new Date(user.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              )}
+
+              {editing && (
+                <>
+                  {!showPasswordFields && (
+                    <>
+                      <div className="input-group">
+                        <label className="input-label" htmlFor="name">Full Name</label>
+                        <input
+                          id="name"
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Enter your full name"
+                        />
+                      </div>
+
+                      <div className="input-group">
+                        <label className="input-label" htmlFor="email">Email</label>
+                        <input
+                          id="email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="Enter your email"
+                        />
+                      </div>
+                    </>
+                  )}
 
         {editing && (
           <>
@@ -616,7 +705,71 @@ export default function Profile() {
           </>
         )}
 
-        {status && <div className="status-message">{status}</div>}
+
+                  {showPasswordFields && (
+                    <>
+                      <div className="input-group">
+                        <label className="input-label" htmlFor="new-password">New Password</label>
+                        <input
+                          id="new-password"
+                          type="password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Enter new password"
+                        />
+                      </div>
+
+
+                      <div className="input-group">
+                        <label className="input-label" htmlFor="confirm-password">Confirm Password</label>
+                        <input
+                          id="confirm-password"
+                          type="password"
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Re-enter new password"
+                        />
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              {status && <div className="status-message">{status}</div>}
+
+              <div className="profile-actions">
+                <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                  {saving ? 'Saving...' : editing ? 'Save Changes' : 'Edit Profile'}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setEditing(true)
+                    setShowPasswordFields((prev) => {
+                      const next = !prev
+                      if (!next) {
+                        setNewPassword('')
+                        setConfirmPassword('')
+                      }
+                      return next
+                    })
+                    setStatus('')
+                  }}
+                >
+                  {showPasswordFields ? 'Cancel Password Change' : 'Change Password'}
+                </button>
+                <button className="btn btn-secondary" onClick={handleDelete} disabled={saving}>
+                  Delete Account
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'tickets' && (
+            <div className="profile-tickets-tab">
+              <MyTicketsPanel />
+            </div>
+          )}
 
         <div className="profile-actions">
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
@@ -631,6 +784,7 @@ export default function Profile() {
           <button className="btn btn-danger" onClick={handleLogout}>
             Log Out
           </button>
+
         </div>
       </div>
 
