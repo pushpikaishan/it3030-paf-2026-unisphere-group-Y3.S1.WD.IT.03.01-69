@@ -26,6 +26,7 @@ export default function Navbar() {
     { to: '/admin/dashboard', label: 'Dashboard' },
     { to: '/admin/resources', label: 'Resources Management' },
     { to: '/admin/bookings', label: 'Booking Management' },
+    { to: '/admin/tickets', label: 'Tickets' },
     { to: '/admin/users', label: 'User Management' },
     { to: '/admin/notifications', label: 'Notifications' },
   ]

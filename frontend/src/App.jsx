@@ -25,6 +25,7 @@ function App() {
     '/admin/dashboard',
     '/admin/resources',
     '/admin/bookings',
+    '/admin/tickets',
     '/admin/users',
     '/admin/notifications',
     '/admin/profile',
