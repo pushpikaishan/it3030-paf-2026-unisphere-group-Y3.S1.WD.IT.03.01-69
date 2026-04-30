@@ -43,6 +43,11 @@ export default function Navbar() {
   const links = isPrivileged && onAdminPage ? adminNav : defaultNav
   const brandHref = isPrivileged && onAdminPage ? '/admin/dashboard' : '/'
 
+  const isLinkActive = (to) => {
+    if (to === '/resources') return pathname === '/resources' || pathname.startsWith('/resources/')
+    return pathname === to
+  }
+
   const mapNotificationCategory = (type) => {
     const normalized = String(type || '').toUpperCase()
     if (normalized.includes('BOOKING')) return 'bookings'
@@ -146,7 +151,11 @@ export default function Navbar() {
       </Link>
       <nav className="nav-links">
         {links.map((link) => (
-          <Link key={link.to} to={link.to}>
+          <Link
+            key={link.to}
+            to={link.to}
+            className={`nav-tab-btn ${isLinkActive(link.to) ? 'active' : ''}`}
+          >
             {link.label}
           </Link>
         ))}
