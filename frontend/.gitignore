@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Sensitive configuration
+.env
+src/config/local.js
