@@ -20,6 +20,7 @@ function App() {
     '/resources',
     '/resources/:id',
     '/tickets',
+    '/restoration',
     '/profile',
     '/admin',
     '/admin/dashboard',
