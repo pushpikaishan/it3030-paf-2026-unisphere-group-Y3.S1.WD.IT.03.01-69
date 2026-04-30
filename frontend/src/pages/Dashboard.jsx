@@ -1,5 +1,7 @@
 import NotificationPanel from '../components/NotificationPanel'
 import heroImg from '../assets/images/SLIIT-malabe.jpg'
+import campusImgOne from '../assets/images/1.jpg'
+import campusImgTwo from '../assets/images/2.jpg'
 
 export default function Dashboard() {
   return (
@@ -19,7 +21,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="tiles">
+      <section className="tiles tiles--overlap">
         <div className="tile">
           <div className="tile__icon">🔧</div>
           <h3>Submit a Request</h3>
@@ -46,12 +48,49 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="grid-two">
-        <div className="card">
-          <h2>Overview</h2>
-          <p className="muted">Key metrics and quick actions will live here.</p>
-        </div>
-        <NotificationPanel />
+      <section className="dashboard-home">
+        <article
+          className="home-feature home-feature--sun"
+          style={{ backgroundImage: `url(${campusImgOne})` }}
+        >
+          <div className="home-feature__media">
+            <img src={campusImgOne} alt="Campus spaces" />
+            <span className="media-tag">Live availability</span>
+          </div>
+          <div className="home-feature__content">
+            <p className="eyebrow">Campus Spaces</p>
+            <h2>Reserve study zones, labs, and halls in minutes.</h2>
+            <p>
+              Check live availability, set your time window, and send a single request to book a space for your team.
+            </p>
+            <div className="home-cta">
+              <button className="btn primary">Browse Spaces</button>
+              <button className="btn ghost">View Live Map</button>
+            </div>
+          </div>
+        </article>
+
+        <article
+          className="home-feature home-feature--night home-feature--reverse"
+          style={{ backgroundImage: `url(${campusImgTwo})` }}
+        >
+          <div className="home-feature__media">
+            <img src={campusImgTwo} alt="Response teams" />
+            <span className="media-tag">24/7 coverage</span>
+          </div>
+          <div className="home-feature__content">
+            <p className="eyebrow">Response Teams</p>
+            <h2>Keep maintenance and safety crews in sync.</h2>
+            <p>
+              Prioritize urgent issues, schedule inspections, and share progress updates with everyone who needs them.
+            </p>
+            <div className="home-cta">
+              <button className="btn primary">Report an Issue</button>
+              <button className="btn ghost">Track My Requests</button>
+            </div>
+          </div>
+        </article>
+
       </section>
     </div>
   )

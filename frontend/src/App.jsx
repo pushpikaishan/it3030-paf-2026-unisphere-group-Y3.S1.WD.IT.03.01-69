@@ -2,6 +2,7 @@ import { matchPath, useLocation } from 'react-router-dom'
 import './App.css'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
+import Footer from './components/Footer'
 import AppRoutes from './routes/AppRoutes'
 import { useAuth } from './hooks/useAuth'
 
@@ -48,6 +49,7 @@ function App() {
   const hideAppChrome = hideAppChromeForUnauthorized || hideAppChromeForForbiddenAdmin
 
   const showNavbar = !hideAppChrome && !showSidebar && !hideNavbarRoutes.includes(pathname) && isKnownRoute
+  const showFooter = !hideAppChrome && !showSidebar && isKnownRoute
 
   return (
     <div className="layout">
@@ -58,6 +60,7 @@ function App() {
           <AppRoutes />
         </div>
       </div>
+      {showFooter && <Footer />}
     </div>
   )
 }
