@@ -9,11 +9,11 @@ export default function AdminUsers() {
   const handleCreated = () => setRefreshKey((key) => key + 1)
 
   return (
-    <div className="stack">
-      <div className="card">
+    <div className="stack admin-users-page">
+      <div className="card admin-users-header-card">
         <h2>User Management</h2>
         <p className="muted">Create and manage platform users.</p>
-        <div className="nav-session" style={{ gap: 12, marginTop: 12 }}>
+        <div className="admin-users-tabs">
           <button className={activeTab === 'add' ? 'button' : 'ghost'} type="button" onClick={() => setActiveTab('add')}>
             Add User
           </button>
