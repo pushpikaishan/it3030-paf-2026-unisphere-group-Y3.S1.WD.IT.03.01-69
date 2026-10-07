@@ -1000,3 +1000,20 @@ code {
 .admin-notify-header-card p {
   margin: 0;
 }
+
+.admin-users-page {
+  align-content: start;
+}
+
+.admin-users-header-card {
+  height: auto;
+  min-height: 0;
+  align-content: start;
+}
+
+.admin-users-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}

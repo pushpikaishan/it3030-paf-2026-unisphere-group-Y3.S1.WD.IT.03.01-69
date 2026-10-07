@@ -7,6 +7,7 @@ import MyBookingsPage from '../pages/MyBookingsPage'
 import ResourcePage from '../pages/ResourcePage'
 import ResourceDetailPage from '../pages/ResourceDetailPage'
 import TicketPage from '../pages/TicketPage'
+import RestorationPage from '../pages/RestorationPage'
 import Login from '../pages/Login'
 import Register from '../pages/Register'
 import Profile from '../pages/Profile'
@@ -27,6 +28,7 @@ export default function AppRoutes() {
   const { user, loading } = useAuth()
   const isPrivileged = user?.role === 'ADMIN' || user?.role === 'MANAGER'
   const isManager = user?.role === 'MANAGER'
+  const isTechnician = user?.role === 'TECHNICIAN'
   const authedHome = isPrivileged ? '/admin/dashboard' : '/dashboard'
 
   if (loading) return <Loader />
@@ -40,6 +42,10 @@ export default function AppRoutes() {
       <Route path="/resources" element={<ResourcePage />} />
       <Route path="/resources/:id" element={<ResourceDetailPage />} />
       <Route path="/tickets" element={<TicketPage />} />
+      <Route
+        path="/restoration"
+        element={isTechnician ? <RestorationPage /> : <NotFound />}
+      />
       <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" replace />} />
       <Route
         path="/admin"
