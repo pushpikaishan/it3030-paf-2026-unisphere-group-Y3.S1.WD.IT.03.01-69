@@ -23,7 +23,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,10 +71,12 @@ public class TicketService {
             tickets = ticketRepository.findByReporterIdOrderByCreatedAtDesc(actor.getId());
         }
 
+        Map<Long, ResourceInfoResponse> resourceMap = buildResourceMap(tickets.stream().map(IncidentTicket::getResourceId).toList());
+
         return tickets.stream()
             .filter(ticket -> status == null || ticket.getStatus() == status)
             .filter(ticket -> priority == null || ticket.getPriority() == priority)
-            .map(this::toSummary)
+            .map(ticket -> toSummary(ticket, resourceMap.get(ticket.getResourceId())))
             .toList();
     }
 
@@ -80,7 +84,7 @@ public class TicketService {
         User actor = resolveActor(authentication);
         IncidentTicket ticket = findTicket(ticketId);
         ensureCanView(ticket, actor);
-        return toDetail(ticket);
+        return toDetail(ticket, findResourceInfo(ticket.getResourceId()));
     }
 
     public TicketDetailResponse createTicket(CreateTicketRequest request, List<MultipartFile> attachments, Authentication authentication) {
@@ -101,7 +105,7 @@ public class TicketService {
         IncidentTicket savedTicket = ticketRepository.save(ticket);
         storeAttachments(savedTicket, actor, attachments);
 
-        return toDetail(savedTicket);
+        return toDetail(savedTicket, findResourceInfo(savedTicket.getResourceId()));
     }
 
     public TicketDetailResponse updateStatus(Long ticketId, UpdateStatusRequest request, Authentication authentication) {
@@ -124,7 +128,8 @@ public class TicketService {
             ticket.setRejectionReason(request.rejectionReason().trim());
         }
 
-        return toDetail(ticketRepository.save(ticket));
+        IncidentTicket updated = ticketRepository.save(ticket);
+        return toDetail(updated, findResourceInfo(updated.getResourceId()));
     }
 
     public TicketDetailResponse assignTechnician(Long ticketId, AssignTechnicianRequest request, Authentication authentication) {
@@ -145,7 +150,8 @@ public class TicketService {
         }
 
         ticket.setAssignedTechnician(technician);
-        return toDetail(ticketRepository.save(ticket));
+        IncidentTicket updated = ticketRepository.save(ticket);
+        return toDetail(updated, findResourceInfo(updated.getResourceId()));
     }
 
     public CommentResponse addComment(Long ticketId, CommentRequest request, Authentication authentication) {
@@ -224,13 +230,16 @@ public class TicketService {
             throw new IllegalArgumentException("Preferred contact must be at least 5 characters");
         }
 
+        if (request.resourceId() != null && request.resourceId() <= 0) {
+            throw new IllegalArgumentException("Resource ID must be a positive number");
+        }
         if (request.resourceId() != null && !resourceRepository.existsById(request.resourceId())) {
             throw new IllegalArgumentException("Resource not found for the provided resource ID");
         }
     }
 
     private Long resolveResourceId(CreateTicketRequest request) {
-        if (request.resourceId() != null) {
+        if (request.resourceId() != null && request.resourceId() > 0) {
             return request.resourceId();
         }
 
@@ -423,7 +432,7 @@ public class TicketService {
         return user.getRole() == Role.ADMIN || user.getRole() == Role.MANAGER;
     }
 
-    private TicketSummaryResponse toSummary(IncidentTicket ticket) {
+    private TicketSummaryResponse toSummary(IncidentTicket ticket, ResourceInfoResponse resource) {
         return new TicketSummaryResponse(
             ticket.getId(),
             ticket.getStatus(),
@@ -431,6 +440,7 @@ public class TicketService {
             ticket.getCategory(),
             ticket.getDescription(),
             ticket.getResourceId(),
+            resource,
             ticket.getLocation(),
             toUserInfo(ticket.getReporter()),
             toUserInfo(ticket.getAssignedTechnician()),
@@ -439,7 +449,7 @@ public class TicketService {
         );
     }
 
-    private TicketDetailResponse toDetail(IncidentTicket ticket) {
+    private TicketDetailResponse toDetail(IncidentTicket ticket, ResourceInfoResponse resource) {
         List<AttachmentResponse> attachments = attachmentRepository.findByTicketIdOrderByCreatedAtAsc(ticket.getId()).stream()
             .map(this::toAttachment)
             .toList();
@@ -458,6 +468,7 @@ public class TicketService {
             ticket.getResolutionNotes(),
             ticket.getRejectionReason(),
             ticket.getResourceId(),
+            resource,
             ticket.getLocation(),
             toUserInfo(ticket.getReporter()),
             toUserInfo(ticket.getAssignedTechnician()),
@@ -465,6 +476,33 @@ public class TicketService {
             comments,
             ticket.getCreatedAt(),
             ticket.getUpdatedAt()
+        );
+    }
+
+    private Map<Long, ResourceInfoResponse> buildResourceMap(List<Long> resourceIds) {
+        List<Long> ids = resourceIds.stream().filter(id -> id != null && id > 0).distinct().toList();
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return resourceRepository
+            .findAllById(ids)
+            .stream()
+            .collect(Collectors.toMap(Resource::getId, this::toResourceInfo, (first, second) -> first));
+    }
+
+    private ResourceInfoResponse findResourceInfo(Long resourceId) {
+        if (resourceId == null || resourceId <= 0) {
+            return null;
+        }
+        return resourceRepository.findById(resourceId).map(this::toResourceInfo).orElse(null);
+    }
+
+    private ResourceInfoResponse toResourceInfo(Resource resource) {
+        return new ResourceInfoResponse(
+            resource.getId(),
+            resource.getName(),
+            resource.getLocation(),
+            resource.getStatus()
         );
     }
 
@@ -548,6 +586,7 @@ public class TicketService {
         TicketCategory category,
         String description,
         Long resourceId,
+        ResourceInfoResponse resource,
         String location,
         UserInfoResponse reporter,
         UserInfoResponse assignedTechnician,
@@ -565,6 +604,7 @@ public class TicketService {
         String resolutionNotes,
         String rejectionReason,
         Long resourceId,
+        ResourceInfoResponse resource,
         String location,
         UserInfoResponse reporter,
         UserInfoResponse assignedTechnician,
@@ -573,4 +613,6 @@ public class TicketService {
         LocalDateTime createdAt,
         LocalDateTime updatedAt
     ) {}
+
+    public record ResourceInfoResponse(Long id, String name, String location, ResourceStatus status) {}
 }

@@ -1,5 +1,6 @@
 package com.unisphere.exception;
 
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
@@ -68,6 +69,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex, HttpServletRequest request) {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected server error", request.getRequestURI(), null);
     }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+public ResponseEntity<ErrorResponse> handleTypeMismatch(
+    MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+    String message = "Invalid value '" + ex.getValue() + "' for parameter '" + ex.getName() + "'";
+    return build(HttpStatus.BAD_REQUEST, message, request.getRequestURI(), null);
+}
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String message, String path, Map<String, String> validationErrors) {
         ErrorResponse body = ErrorResponse.builder()

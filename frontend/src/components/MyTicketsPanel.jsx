@@ -7,6 +7,11 @@ const PRIORITY_OPTIONS = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
 const STATUS_OPTIONS = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED']
 
 const friendly = (value) => value?.replaceAll('_', ' ') || '-'
+const resourceLabel = (ticket) => {
+  if (ticket?.resource?.name) return ticket.resource.name
+  if (ticket?.resourceId) return `Resource #${ticket.resourceId}`
+  return '-'
+}
 
 const toIso = (value) => {
   if (!value) return '-'
@@ -290,7 +295,7 @@ export default function MyTicketsPanel() {
                   <strong>Priority:</strong> {friendly(selectedTicket.priority)}
                 </p>
                 <p>
-                  <strong>Resource ID:</strong> {selectedTicket.resourceId ?? '-'}
+                  <strong>Resource:</strong> {resourceLabel(selectedTicket)}
                 </p>
                 <p>
                   <strong>Location:</strong> {selectedTicket.location || '-'}

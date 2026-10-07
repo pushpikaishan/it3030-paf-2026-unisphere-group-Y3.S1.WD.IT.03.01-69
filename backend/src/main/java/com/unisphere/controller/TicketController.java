@@ -35,19 +35,25 @@ public class TicketController {
         this.ticketService = ticketService;
     }
 
-    @GetMapping
-    public ResponseEntity<?> list(
-        Authentication authentication,
-        @RequestParam(required = false) TicketStatus status,
-        @RequestParam(required = false) TicketPriority priority
-    ) {
-        try {
-            List<TicketSummaryResponse> tickets = ticketService.listTickets(authentication, status, priority);
-            return ResponseEntity.ok(tickets);
-        } catch (IllegalArgumentException ex) {
-            return badRequest(ex.getMessage());
-        }
+@GetMapping
+public ResponseEntity<?> list(
+    Authentication authentication,
+    @RequestParam(required = false) String status,
+    @RequestParam(required = false) String priority
+) {
+    try {
+        TicketStatus ticketStatus = (status != null && !status.isBlank()) 
+            ? TicketStatus.valueOf(status.toUpperCase()) : null;
+        TicketPriority ticketPriority = (priority != null && !priority.isBlank()) 
+            ? TicketPriority.valueOf(priority.toUpperCase()) : null;
+        
+        List<TicketSummaryResponse> tickets = ticketService.listTickets(
+            authentication, ticketStatus, ticketPriority);
+        return ResponseEntity.ok(tickets);
+    } catch (IllegalArgumentException ex) {
+        return badRequest(ex.getMessage());
     }
+}
 
     @GetMapping("/{id}")
     public ResponseEntity<?> byId(@PathVariable Long id, Authentication authentication) {

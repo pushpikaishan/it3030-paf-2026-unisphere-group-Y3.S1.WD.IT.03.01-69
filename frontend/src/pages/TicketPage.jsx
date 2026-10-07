@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import api from '../services/api'
 import { ticketService } from '../services/ticketService'
 import './css/TicketPage.css'
 
@@ -9,7 +10,10 @@ const friendly = (value) => value?.replaceAll('_', ' ') || '-'
 export default function TicketPage() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const [resourceOptions, setResourceOptions] = useState([])
+  const [loadingResources, setLoadingResources] = useState(true)
   const [form, setForm] = useState({
+    resourceId: '',
     location: '',
     category: 'HARDWARE',
     priority: 'MEDIUM',
@@ -17,6 +21,28 @@ export default function TicketPage() {
     preferredContact: '',
     attachments: [],
   })
+
+  useEffect(() => {
+    let mounted = true
+    const loadResources = async () => {
+      setLoadingResources(true)
+      try {
+        const { data } = await api.get('/resources', { params: { page: 0, size: 200 } })
+        if (!mounted) return
+        const list = Array.isArray(data?.content) ? data.content : []
+        setResourceOptions(list)
+      } catch {
+        if (mounted) setResourceOptions([])
+      } finally {
+        if (mounted) setLoadingResources(false)
+      }
+    }
+
+    loadResources()
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const handleCreate = async (event) => {
     event.preventDefault()
@@ -38,7 +64,7 @@ export default function TicketPage() {
 
     try {
       const payload = {
-        resourceId: null,
+        resourceId: form.resourceId ? Number(form.resourceId) : null,
         location: form.location || null,
         category: form.category,
         priority: form.priority,
@@ -50,6 +76,7 @@ export default function TicketPage() {
       setNotice('Ticket created successfully.')
       setForm((prev) => ({
         ...prev,
+        resourceId: '',
         location: '',
         description: '',
         preferredContact: '',
@@ -73,6 +100,24 @@ export default function TicketPage() {
       <section className="card">
         <h3>Create Incident Ticket</h3>
         <form className="ticket-form" onSubmit={handleCreate}>
+          <label>
+            Resource (optional)
+            <select
+              value={form.resourceId}
+              onChange={(event) => setForm((prev) => ({ ...prev, resourceId: event.target.value }))}
+              disabled={loadingResources || resourceOptions.length === 0}
+            >
+              <option value="">
+                {loadingResources ? 'Loading resources...' : resourceOptions.length ? 'Select a resource' : 'No resources in database'}
+              </option>
+              {resourceOptions.map((resource) => (
+                <option key={resource.id} value={resource.id}>
+                  {resource.name} ({resource.location})
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label>
             Location (optional)
             <input

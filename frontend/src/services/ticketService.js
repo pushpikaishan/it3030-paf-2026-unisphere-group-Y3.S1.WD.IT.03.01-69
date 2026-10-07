@@ -2,7 +2,24 @@ import api from './api'
 
 export const ticketService = {
   list: async (params = {}) => {
-    const { data } = await api.get('/tickets', { params })
+    // Filter out invalid/empty filter values
+    const cleanParams = {}
+    
+    if (params.status && params.status !== 'ALL' && params.status !== '') {
+      cleanParams.status = params.status
+    }
+    if (params.priority && params.priority !== 'ALL' && params.priority !== '') {
+      cleanParams.priority = params.priority
+    }
+    
+    // Keep any other params that were passed
+    Object.keys(params).forEach(key => {
+      if (key !== 'status' && key !== 'priority') {
+        cleanParams[key] = params[key]
+      }
+    })
+    
+    const { data } = await api.get('/tickets', { params: cleanParams })
     return data
   },
 
